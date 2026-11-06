@@ -10,9 +10,7 @@ LexMind helps a chamber manage every case, understand complex matters, research 
 
 ## Status
 
-🟡 **Phase: Architecture & Design (complete).** Implementation has not started. See [PROGRESS.md](PROGRESS.md).
-
-This repository currently contains the architecture deliverables. Code begins at Phase 0/1 per the roadmap.
+🟢 **Phase 0 — Project setup (in progress).** Architecture is complete; the backend (FastAPI + uv), frontend (Next.js + TS + Tailwind), Docker Compose stack, and CI skeleton are scaffolded. See [PROGRESS.md](PROGRESS.md).
 
 ## Architecture documents
 
@@ -47,9 +45,44 @@ Start here, in order:
 - Secrets only via environment/secrets manager — never in code.
 - No feature is "complete" until implemented **and** tested.
 
-## Getting started (once Phase 0 lands)
+## Getting started
 
-Implementation setup (Docker Compose, `uv`, Next.js) will be documented here when Phase 0 is built. Not available yet.
+Prerequisites: Docker + Docker Compose, and (for working outside containers) `uv` and Node 22+.
+
+### Full stack with Docker
+
+```bash
+cp .env.example .env
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+docker compose up --build
+```
+
+Then:
+- API: http://localhost:8000 (docs at `/docs`, health at `/health`)
+- Web: http://localhost:3000
+- MinIO console: http://localhost:9001
+- Mail UI (Mailpit): http://localhost:8025
+
+### Backend only (local)
+
+```bash
+cd backend
+uv sync
+uv run uvicorn app.main:app --reload
+uv run pytest
+uv run ruff check .
+```
+
+### Frontend only (local)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+> Dependencies use **`uv`** (backend) — do not use plain `pip`.
 
 ## License
 

@@ -3,9 +3,9 @@
 Single source of truth for status. A box is checked only when the feature is **implemented and tested**, not when it merely renders.
 
 ## Phase 0 — Project setup
-- [ ] Repo layout + Docker Compose (api, web, db+pgvector, redis, worker, minio, mailhog)
-- [ ] Backend scaffold with `uv`; Next.js scaffold; lint/format; CI skeleton; `.env.example`
-- [ ] `docker compose up` brings the full stack up
+- [x] Repo layout + Docker Compose (api, web, db+pgvector, redis, worker, minio, mailpit)
+- [x] Backend scaffold with `uv` (FastAPI, health, tests); Next.js scaffold (TS+Tailwind); ruff + eslint; CI skeleton; `.env.example`
+- [~] `docker compose up` brings the full stack up (compose config validated with `docker compose config`; full `up --build` not yet run — Docker Desktop daemon was not running in the setup session. Start Docker Desktop, then run `docker compose up --build` to confirm.)
 
 ## Phase 1 — Foundation
 - [ ] Identity/tenancy schema + Alembic migrations + RLS policies
