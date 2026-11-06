@@ -55,3 +55,40 @@ EVENT_STATUS_CHANGED = "status_changed"
 EVENT_PRIORITY_CHANGED = "priority_changed"
 EVENT_NOTE_ADDED = "note_added"
 EVENT_PARTY_ADDED = "party_added"
+EVENT_HEARING_SCHEDULED = "hearing_scheduled"
+EVENT_DOCUMENT_UPLOADED = "document_uploaded"
+
+# Hearings. A manually-entered hearing is "unconfirmed" until matched against an
+# official source (honesty rule, prompt §9).
+HEARING_STATUSES: list[str] = ["unconfirmed", "confirmed", "held", "adjourned", "cancelled"]
+DEFAULT_HEARING_STATUS = "unconfirmed"
+
+# Tasks.
+TASK_STATUSES: list[str] = ["open", "in_progress", "blocked", "done", "cancelled"]
+DEFAULT_TASK_STATUS = "open"
+
+# Approvals.
+APPROVAL_TARGETS: list[str] = ["document", "research_report", "case_analysis", "case"]
+APPROVAL_STATUSES: list[str] = ["pending", "approved", "rejected"]
+
+# Notifications.
+NOTIFICATION_CHANNELS: list[str] = ["in_app", "email"]
+
+# Documents.
+DOCUMENT_CATEGORIES: list[str] = [
+    "fir",
+    "police_report",
+    "witness_statement",
+    "court_order",
+    "charge_sheet",
+    "medical_report",
+    "agreement",
+    "contract",
+    "evidence",
+    "judgment",
+    "correspondence",
+    "other",
+]
+DOC_SCAN_PENDING = "pending"
+DOC_SCAN_CLEAN = "clean"
+DOC_SCAN_INFECTED = "infected"

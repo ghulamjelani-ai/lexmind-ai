@@ -6,10 +6,13 @@ and on PostgreSQL in production.
 from __future__ import annotations
 
 import os
+import tempfile
 
 # Must be set before any app module imports its settings/engine.
 os.environ["DATABASE_URL"] = "sqlite://"
 os.environ["SECURE_COOKIES"] = "false"
+# Isolate document storage to a temp dir for tests.
+os.environ.setdefault("STORAGE_LOCAL_DIR", tempfile.mkdtemp(prefix="lexmind-test-storage-"))
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402

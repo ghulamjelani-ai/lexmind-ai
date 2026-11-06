@@ -5,7 +5,7 @@
  * credentials. localhost:3000 and localhost:8000 are same-site (both localhost),
  * so the SameSite=Lax cookie is sent cross-origin in dev.
  */
-import type { Invite, Me, Organization, Role, User } from "@/types";
+import type { Case, CaseEvent, Invite, Me, Organization, Page, Role, User } from "@/types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const V1 = `${BASE}/api/v1`;
@@ -75,4 +75,36 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ email, role }),
     }),
+
+  listCases: (params: { q?: string; status?: string; limit?: number; offset?: number } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.q) qs.set("q", params.q);
+    if (params.status) qs.set("status", params.status);
+    qs.set("limit", String(params.limit ?? 20));
+    qs.set("offset", String(params.offset ?? 0));
+    return request<Page<Case>>(`/cases?${qs.toString()}`);
+  },
+
+  createCase: (input: { title: string; category: string; opposite_party?: string }) =>
+    request<Case>("/cases", { method: "POST", body: JSON.stringify(input) }),
+
+  getCase: (id: string) => request<Case>(`/cases/${id}`),
+
+  updateCase: (id: string, patch: Partial<Pick<Case, "status" | "priority" | "title">>) =>
+    request<Case>(`/cases/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
+
+  caseTimeline: (id: string) => request<CaseEvent[]>(`/cases/${id}/timeline`),
+
+  addCaseNote: (id: string, note: string) =>
+    request<CaseEvent>(`/cases/${id}/notes`, { method: "POST", body: JSON.stringify({ note }) }),
 };
+
+export const CASE_CATEGORIES = [
+  "criminal", "murder", "theft", "robbery", "fraud", "cybercrime", "civil",
+  "property", "family", "divorce", "inheritance", "constitutional", "corporate",
+  "banking", "bail", "other",
+];
+export const CASE_STATUSES = [
+  "open", "under_investigation", "in_hearing", "pending", "on_hold", "closed", "archived",
+];
+export const CASE_PRIORITIES = ["critical", "high", "medium", "low"];

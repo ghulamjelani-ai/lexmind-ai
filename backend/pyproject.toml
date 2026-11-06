@@ -17,6 +17,7 @@ dependencies = [
     "email-validator>=2.2",
     "pyotp>=2.9",
     "cryptography>=43",
+    "python-multipart>=0.0.12",
 ]
 
 [dependency-groups]

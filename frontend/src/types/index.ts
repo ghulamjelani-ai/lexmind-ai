@@ -30,3 +30,36 @@ export interface Invite {
   email: string;
   accepted: boolean;
 }
+
+export interface Page<T> {
+  items: T[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface Case {
+  id: string;
+  title: string;
+  case_number: string | null;
+  category: string;
+  custom_category: string | null;
+  client_id: string | null;
+  opposite_party: string | null;
+  court_name: string | null;
+  status: string;
+  priority: string;
+  next_hearing_date: string | null;
+  description: string | null;
+  assigned_lawyer_id: string | null;
+  created_at: string;
+}
+
+export interface CaseEvent {
+  id: string;
+  case_id: string;
+  event_type: string;
+  actor_id: string | null;
+  payload_json: Record<string, unknown>;
+  occurred_at: string;
+}

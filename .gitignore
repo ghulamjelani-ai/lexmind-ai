@@ -24,9 +24,12 @@ dist/
 
 # Data / local infra
 *.sqlite3
+*.db
 postgres-data/
 minio-data/
 redis-data/
+var/
+storage/
 
 # OS / editor
 .DS_Store

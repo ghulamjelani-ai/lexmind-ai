@@ -57,6 +57,13 @@ class Settings(BaseSettings):
     s3_endpoint_url: str = "http://localhost:9000"
     s3_bucket: str = "lexmind-documents"
 
+    # Document storage backend: "local" (filesystem) for dev/tests; an
+    # S3-compatible backend is a swap-in for production.
+    storage_backend: str = "local"
+    storage_local_dir: str = "./var/storage"
+    # Max upload size in bytes (default 25 MB).
+    max_upload_bytes: int = 25 * 1024 * 1024
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
