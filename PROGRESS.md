@@ -8,12 +8,13 @@ Single source of truth for status. A box is checked only when the feature is **i
 - [~] `docker compose up` brings the full stack up (compose config validated with `docker compose config`; full `up --build` not yet run — Docker Desktop daemon was not running in the setup session. Start Docker Desktop, then run `docker compose up --build` to confirm.)
 
 ## Phase 1 — Foundation
-- [ ] Identity/tenancy schema + Alembic migrations + RLS policies
-- [ ] Auth: Argon2id, sessions, MFA, secure password reset
-- [ ] RBAC engine + permission catalog + resource-scope checks
-- [ ] Organizations, users, roles, invites
-- [ ] Dashboard shell with role-filtered navigation
-- [ ] Tests: auth, authorization, cross-tenant isolation
+- [x] Identity/tenancy schema + Alembic initial migration (org, user, role, permission, bindings, session, invite, audit)
+- [~] RLS policies — deferred: app-layer tenant scoping done + tested; Postgres RLS backstop needs a running DB to wire the per-connection org GUC and test (tracked for when Docker/Postgres is up)
+- [~] Auth — Argon2id hashing + server-side sessions (hashed tokens, httpOnly cookie) done; MFA fields present but TOTP flow not built; secure password reset not built yet
+- [x] RBAC engine + permission catalog + role→permission scopes (endpoint-level gating done; resource-level `scope_for` ready for when case/doc modules land)
+- [~] Organizations, users, roles — provisioning, user CRUD (create/list), role listing done; invite model exists but invite accept flow not built yet
+- [ ] Dashboard shell with role-filtered navigation (frontend — not started)
+- [x] Tests: auth, authorization, cross-tenant isolation (17 passing, SQLite in-memory)
 
 ## Phase 2 — Law Chamber Management
 - [ ] Case management (full profile, categories+custom, timeline, search/filter/sort/pagination)

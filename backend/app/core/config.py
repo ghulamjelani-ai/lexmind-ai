@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     # Comma-separated list of allowed CORS origins (frontend dev server, etc.)
     cors_origins: str = "http://localhost:3000"
 
+    # Sessions
+    session_cookie_name: str = "lexmind_session"
+    session_ttl_hours: int = 72
+    # Set true behind HTTPS (production); false for local http dev.
+    secure_cookies: bool = False
+
     # Datastores (populated by docker-compose / env in each environment)
     database_url: str = "postgresql+psycopg://lexmind:lexmind@localhost:5432/lexmind"
     redis_url: str = "redis://localhost:6379/0"
