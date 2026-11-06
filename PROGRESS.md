@@ -13,8 +13,8 @@ Single source of truth for status. A box is checked only when the feature is **i
 - [x] Auth — Argon2id hashing + server-side sessions (hashed tokens, httpOnly cookie); MFA (TOTP) enroll/activate/disable + login enforcement; secure single-use password reset (invalidates sessions)
 - [x] RBAC engine + permission catalog + role→permission scopes (endpoint-level gating done; resource-level `scope_for` ready for when case/doc modules land)
 - [x] Organizations, users, roles, invites — provisioning, user CRUD (create/list), role listing, invite create + accept flow
-- [ ] Dashboard shell with role-filtered navigation (frontend — not started)
-- [x] Tests: auth, authorization, cross-tenant isolation + MFA, password reset, invites (25 passing, SQLite in-memory)
+- [x] Dashboard shell with role-filtered navigation — Next.js login (cookie auth), client auth context with `can()`, role-filtered sidebar, dashboard home, real Users page (list + create), section stubs. Verified live in-browser against the running backend (owner sees full nav + 6 users; junior sees reduced nav)
+- [x] Tests: auth, authorization, cross-tenant isolation + MFA, password reset, invites (25 passing, SQLite in-memory); + Postgres RLS integration suite
 
 ## Phase 2 — Law Chamber Management
 - [ ] Case management (full profile, categories+custom, timeline, search/filter/sort/pagination)
