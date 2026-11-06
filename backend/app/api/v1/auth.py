@@ -8,8 +8,17 @@ from app.core.config import get_settings
 from app.core.rbac import AuthContext
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.auth import LoginRequest, MeOut, MessageOut, UserOut
-from app.services import audit_service, auth_service
+from app.schemas.auth import (
+    LoginRequest,
+    MeOut,
+    MessageOut,
+    MfaCodeIn,
+    MfaEnrollOut,
+    PasswordResetConfirmIn,
+    PasswordResetRequestIn,
+    UserOut,
+)
+from app.services import audit_service, auth_service, mfa_service, password_reset_service
 from app.services.rbac_service import build_auth_context
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -55,6 +64,22 @@ def login(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
         )
 
+    if not mfa_service.verify_login(user, body.mfa_code):
+        audit_service.record(
+            db,
+            action="auth.login",
+            result="deny",
+            organization_id=user.organization_id,
+            actor_id=user.id,
+            ip=_ip(request),
+            metadata={"reason": "mfa_required"},
+        )
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="MFA code required or invalid",
+        )
+
     token = auth_service.create_session(
         db, user, ip=_ip(request), user_agent=request.headers.get("user-agent")
     )
@@ -97,3 +122,66 @@ def me(
         user=UserOut.model_validate(user),
         permissions={code: sorted(scopes) for code, scopes in ctx.permissions.items()},
     )
+
+
+# --- MFA (TOTP) --------------------------------------------------------------
+@router.post("/mfa/enroll", response_model=MfaEnrollOut)
+def mfa_enroll(
+    db: Session = Depends(get_db), user: User = Depends(get_current_user)
+) -> MfaEnrollOut:
+    secret, uri = mfa_service.enroll(db, user)
+    db.commit()
+    return MfaEnrollOut(secret=secret, otpauth_uri=uri)
+
+
+@router.post("/mfa/activate", response_model=MessageOut)
+def mfa_activate(
+    body: MfaCodeIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+) -> MessageOut:
+    try:
+        mfa_service.activate(db, user, body.code)
+    except mfa_service.MFAError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    db.commit()
+    return MessageOut(message="MFA enabled")
+
+
+@router.post("/mfa/disable", response_model=MessageOut)
+def mfa_disable(
+    body: MfaCodeIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+) -> MessageOut:
+    try:
+        mfa_service.disable(db, user, body.code)
+    except mfa_service.MFAError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    db.commit()
+    return MessageOut(message="MFA disabled")
+
+
+# --- Password reset ----------------------------------------------------------
+@router.post("/password-reset/request", response_model=MessageOut)
+def password_reset_request(
+    body: PasswordResetRequestIn, db: Session = Depends(get_db)
+) -> MessageOut:
+    # Always returns the same message (no account enumeration). The token is
+    # delivered out-of-band (logged in dev; emailed once notifications land).
+    token = password_reset_service.request_reset(db, body.org_slug, body.email)
+    db.commit()
+    if token and get_settings().environment != "production":
+        import logging
+
+        logging.getLogger(__name__).info("Password reset token for %s: %s", body.email, token)
+    return MessageOut(message="If the account exists, a reset link has been sent.")
+
+
+@router.post("/password-reset/confirm", response_model=MessageOut)
+def password_reset_confirm(
+    body: PasswordResetConfirmIn, db: Session = Depends(get_db)
+) -> MessageOut:
+    ok = password_reset_service.confirm_reset(db, body.token, body.new_password)
+    db.commit()
+    if not ok:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token"
+        )
+    return MessageOut(message="Password updated")

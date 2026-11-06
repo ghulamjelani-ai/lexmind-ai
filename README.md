@@ -10,7 +10,7 @@ LexMind helps a chamber manage every case, understand complex matters, research 
 
 ## Status
 
-🟢 **Phase 1 — Foundation (in progress).** Phase 0 scaffold done. Backend now has multi-tenant identity: organizations, users, roles, Argon2id auth with server-side sessions, an RBAC engine + permission catalog, and Alembic migrations — with auth, authorization, and cross-tenant isolation tests (17 passing). Remaining Phase 1: MFA, password-reset, invite-accept flow, the Postgres RLS backstop, and the frontend dashboard shell. See [PROGRESS.md](PROGRESS.md).
+🟢 **Phase 1 — Foundation (nearly complete).** Backend has multi-tenant identity: organizations, users, roles, invites; Argon2id auth with server-side sessions; MFA (TOTP); secure password reset; an RBAC engine + permission catalog; and Alembic migrations — with 25 passing tests (auth, authorization, cross-tenant isolation, MFA, reset, invites). Remaining Phase 1: the Postgres RLS backstop (needs a running Postgres to build safely) and the frontend dashboard shell. See [PROGRESS.md](PROGRESS.md).
 
 ## Architecture documents
 

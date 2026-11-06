@@ -9,12 +9,12 @@ Single source of truth for status. A box is checked only when the feature is **i
 
 ## Phase 1 — Foundation
 - [x] Identity/tenancy schema + Alembic initial migration (org, user, role, permission, bindings, session, invite, audit)
-- [~] RLS policies — deferred: app-layer tenant scoping done + tested; Postgres RLS backstop needs a running DB to wire the per-connection org GUC and test (tracked for when Docker/Postgres is up)
-- [~] Auth — Argon2id hashing + server-side sessions (hashed tokens, httpOnly cookie) done; MFA fields present but TOTP flow not built; secure password reset not built yet
+- [~] RLS policies — deferred: app-layer tenant scoping done + tested; Postgres RLS backstop needs a running DB to design the auth-bootstrap (privileged) connection and the per-connection org GUC, and to test it (tracked for when Docker/Postgres is up — enabling it blind would break the app)
+- [x] Auth — Argon2id hashing + server-side sessions (hashed tokens, httpOnly cookie); MFA (TOTP) enroll/activate/disable + login enforcement; secure single-use password reset (invalidates sessions)
 - [x] RBAC engine + permission catalog + role→permission scopes (endpoint-level gating done; resource-level `scope_for` ready for when case/doc modules land)
-- [~] Organizations, users, roles — provisioning, user CRUD (create/list), role listing done; invite model exists but invite accept flow not built yet
+- [x] Organizations, users, roles, invites — provisioning, user CRUD (create/list), role listing, invite create + accept flow
 - [ ] Dashboard shell with role-filtered navigation (frontend — not started)
-- [x] Tests: auth, authorization, cross-tenant isolation (17 passing, SQLite in-memory)
+- [x] Tests: auth, authorization, cross-tenant isolation + MFA, password reset, invites (25 passing, SQLite in-memory)
 
 ## Phase 2 — Law Chamber Management
 - [ ] Case management (full profile, categories+custom, timeline, search/filter/sort/pagination)

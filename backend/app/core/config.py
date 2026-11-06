@@ -32,6 +32,17 @@ class Settings(BaseSettings):
     # Set true behind HTTPS (production); false for local http dev.
     secure_cookies: bool = False
 
+    # Field encryption (Fernet key, url-safe base64). MUST be set in production;
+    # empty falls back to an insecure dev key (crypto.py warns).
+    encryption_key: str = ""
+
+    # MFA
+    mfa_issuer: str = "LexMind AI"
+
+    # Password reset / invite token lifetimes
+    password_reset_ttl_minutes: int = 60
+    invite_ttl_hours: int = 168  # 7 days
+
     # Datastores (populated by docker-compose / env in each environment)
     database_url: str = "postgresql+psycopg://lexmind:lexmind@localhost:5432/lexmind"
     redis_url: str = "redis://localhost:6379/0"

@@ -9,6 +9,52 @@ class LoginRequest(BaseModel):
     org_slug: str = Field(min_length=1, max_length=120)
     email: EmailStr
     password: str = Field(min_length=1, max_length=256)
+    # Required only when the account has MFA enabled.
+    mfa_code: str | None = Field(default=None, max_length=12)
+
+
+class MfaEnrollOut(BaseModel):
+    secret: str
+    otpauth_uri: str
+
+
+class MfaCodeIn(BaseModel):
+    code: str = Field(min_length=6, max_length=12)
+
+
+class PasswordResetRequestIn(BaseModel):
+    org_slug: str = Field(min_length=1, max_length=120)
+    email: EmailStr
+
+
+class PasswordResetConfirmIn(BaseModel):
+    token: str = Field(min_length=10, max_length=256)
+    new_password: str = Field(min_length=8, max_length=256)
+
+
+class InviteCreateIn(BaseModel):
+    email: EmailStr
+    role: str = Field(min_length=1, max_length=100)
+
+
+class InviteCreatedOut(BaseModel):
+    id: uuid.UUID
+    email: EmailStr
+    role: str
+    # Returned to the inviting admin to deliver out-of-band (email in Phase 2+).
+    token: str
+
+
+class InviteOut(BaseModel):
+    id: uuid.UUID
+    email: EmailStr
+    accepted: bool
+
+
+class InviteAcceptIn(BaseModel):
+    token: str = Field(min_length=10, max_length=256)
+    full_name: str = Field(min_length=1, max_length=255)
+    password: str = Field(min_length=8, max_length=256)
 
 
 class UserOut(BaseModel):
