@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_tenant_db
 from app.db.session import get_db
 from app.models.organization import Organization
 from app.models.user import User
@@ -38,7 +38,7 @@ def register_org(body: OrgRegisterRequest, db: Session = Depends(get_db)) -> Org
 
 @router.get("/me", response_model=OrgOut)
 def my_org(
-    db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    db: Session = Depends(get_tenant_db), user: User = Depends(get_current_user)
 ) -> Organization:
     org = db.get(Organization, user.organization_id)
     if org is None:

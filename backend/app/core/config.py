@@ -44,7 +44,13 @@ class Settings(BaseSettings):
     invite_ttl_hours: int = 168  # 7 days
 
     # Datastores (populated by docker-compose / env in each environment)
+    # database_url is the privileged connection (migrations + pre-tenant auth
+    # bootstrap). It is a superuser/owner and bypasses RLS.
     database_url: str = "postgresql+psycopg://lexmind:lexmind@localhost:5432/lexmind"
+    # app_database_url is the restricted runtime connection (RLS-enforced). When
+    # empty it falls back to database_url (e.g. SQLite tests, or dev before the
+    # restricted role exists).
+    app_database_url: str = ""
     redis_url: str = "redis://localhost:6379/0"
 
     # Object storage (S3-compatible, e.g. MinIO in local dev)

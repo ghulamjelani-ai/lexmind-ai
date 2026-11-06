@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import require
+from app.api.deps import get_tenant_db, require
 from app.core.rbac import AuthContext
 from app.db.session import get_db
 from app.models.auth import Invite
@@ -24,7 +24,7 @@ router = APIRouter(prefix="/invites", tags=["invites"])
 @router.post("", response_model=InviteCreatedOut, status_code=status.HTTP_201_CREATED)
 def create_invite(
     body: InviteCreateIn,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_tenant_db),
     ctx: AuthContext = Depends(require("admin:users:manage")),
 ) -> InviteCreatedOut:
     try:
@@ -43,7 +43,7 @@ def create_invite(
 
 @router.get("", response_model=list[InviteOut])
 def list_invites(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_tenant_db),
     ctx: AuthContext = Depends(require("admin:users:manage")),
 ) -> list[InviteOut]:
     rows = db.scalars(

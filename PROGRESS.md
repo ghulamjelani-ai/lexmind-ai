@@ -8,8 +8,8 @@ Single source of truth for status. A box is checked only when the feature is **i
 - [~] `docker compose up` brings the full stack up (compose config validated with `docker compose config`; full `up --build` not yet run — Docker Desktop daemon was not running in the setup session. Start Docker Desktop, then run `docker compose up --build` to confirm.)
 
 ## Phase 1 — Foundation
-- [x] Identity/tenancy schema + Alembic initial migration (org, user, role, permission, bindings, session, invite, audit)
-- [~] RLS policies — deferred: app-layer tenant scoping done + tested; Postgres RLS backstop needs a running DB to design the auth-bootstrap (privileged) connection and the per-connection org GUC, and to test it (tracked for when Docker/Postgres is up — enabling it blind would break the app)
+- [x] Identity/tenancy schema + Alembic migrations (org, user, role, permission, bindings, session, invite, password-reset, audit) — validated on real Postgres (native uuid)
+- [x] RLS policies (Postgres backstop) — restricted `lexmind_app` role + RLS on all 9 tenant tables, scoped by the `app.current_org` GUC; two-connection design (privileged auth bootstrap + restricted tenant session). Verified live: fail-closed with no tenant set, strict per-org visibility, cross-org inserts blocked by WITH CHECK; end-to-end over HTTP too. Skip-guarded PG integration test in tests/integration/
 - [x] Auth — Argon2id hashing + server-side sessions (hashed tokens, httpOnly cookie); MFA (TOTP) enroll/activate/disable + login enforcement; secure single-use password reset (invalidates sessions)
 - [x] RBAC engine + permission catalog + role→permission scopes (endpoint-level gating done; resource-level `scope_for` ready for when case/doc modules land)
 - [x] Organizations, users, roles, invites — provisioning, user CRUD (create/list), role listing, invite create + accept flow

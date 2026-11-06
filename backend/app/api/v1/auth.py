@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_auth_context, get_current_user
+from app.api.deps import get_auth_context, get_current_user, get_tenant_db
 from app.core.config import get_settings
 from app.core.rbac import AuthContext
 from app.db.session import get_db
@@ -114,7 +114,6 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)) 
 
 @router.get("/me", response_model=MeOut)
 def me(
-    db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
     ctx: AuthContext = Depends(get_auth_context),
 ) -> MeOut:
@@ -127,19 +126,22 @@ def me(
 # --- MFA (TOTP) --------------------------------------------------------------
 @router.post("/mfa/enroll", response_model=MfaEnrollOut)
 def mfa_enroll(
-    db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    db: Session = Depends(get_tenant_db), user: User = Depends(get_current_user)
 ) -> MfaEnrollOut:
-    secret, uri = mfa_service.enroll(db, user)
+    db_user = db.get(User, user.id)
+    secret, uri = mfa_service.enroll(db, db_user)
     db.commit()
     return MfaEnrollOut(secret=secret, otpauth_uri=uri)
 
 
 @router.post("/mfa/activate", response_model=MessageOut)
 def mfa_activate(
-    body: MfaCodeIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    body: MfaCodeIn,
+    db: Session = Depends(get_tenant_db),
+    user: User = Depends(get_current_user),
 ) -> MessageOut:
     try:
-        mfa_service.activate(db, user, body.code)
+        mfa_service.activate(db, db.get(User, user.id), body.code)
     except mfa_service.MFAError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     db.commit()
@@ -148,10 +150,12 @@ def mfa_activate(
 
 @router.post("/mfa/disable", response_model=MessageOut)
 def mfa_disable(
-    body: MfaCodeIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+    body: MfaCodeIn,
+    db: Session = Depends(get_tenant_db),
+    user: User = Depends(get_current_user),
 ) -> MessageOut:
     try:
-        mfa_service.disable(db, user, body.code)
+        mfa_service.disable(db, db.get(User, user.id), body.code)
     except mfa_service.MFAError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     db.commit()

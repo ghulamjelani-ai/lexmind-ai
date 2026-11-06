@@ -15,7 +15,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lexmind}
       POSTGRES_DB: ${POSTGRES_DB:-lexmind}
     ports:
-      - "5432:5432"
+      # Host 5433 -> container 5432, to avoid clashing with a local Postgres on
+      # 5432. In-network services still reach it as db:5432.
+      - "5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -57,13 +59,30 @@ services:
       - "1025:1025"   # SMTP
       - "8025:8025"   # web UI
 
+  # Runs migrations once (creates schema, the restricted lexmind_app role, and
+  # RLS policies) before the API starts.
+  migrate:
+    build: ./backend
+    command: ["uv", "run", "alembic", "upgrade", "head"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-lexmind}:${POSTGRES_PASSWORD:-lexmind}@db:5432/${POSTGRES_DB:-lexmind}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:-lexmind_app}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
   api:
     build: ./backend
     env_file:
       - path: ./backend/.env
         required: false
     environment:
+      # Privileged connection (migrations already ran via the migrate service;
+      # used here only for the pre-tenant auth bootstrap).
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-lexmind}:${POSTGRES_PASSWORD:-lexmind}@db:5432/${POSTGRES_DB:-lexmind}
+      # Restricted, RLS-enforced connection for tenant-scoped request handling.
+      APP_DATABASE_URL: postgresql+psycopg://lexmind_app:${APP_DB_PASSWORD:-lexmind_app}@db:5432/${POSTGRES_DB:-lexmind}
       REDIS_URL: redis://redis:6379/0
       S3_ENDPOINT_URL: http://minio:9000
     ports:
@@ -75,6 +94,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   worker:
     build: ./backend

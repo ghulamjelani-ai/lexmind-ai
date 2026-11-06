@@ -4,10 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import require
+from app.api.deps import get_tenant_db, require
 from app.core.rbac import AuthContext
 from app.core.security import hash_password
-from app.db.session import get_db
 from app.models.rbac import Role
 from app.models.user import User
 from app.schemas.auth import UserCreateRequest, UserOut
@@ -18,7 +17,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get("", response_model=list[UserOut])
 def list_users(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_tenant_db),
     ctx: AuthContext = Depends(require("admin:users:manage")),
 ) -> list[User]:
     return list(
@@ -34,7 +33,7 @@ def list_users(
 @router.post("", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 def create_user(
     body: UserCreateRequest,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_tenant_db),
     ctx: AuthContext = Depends(require("admin:users:manage")),
 ) -> User:
     role = db.scalar(

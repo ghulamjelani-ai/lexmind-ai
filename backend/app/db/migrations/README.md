@@ -16,3 +16,18 @@ uv run alembic downgrade -1
 PostgreSQL-only concerns (Row-Level Security policies, pgvector indexes) are
 added in dedicated migrations guarded by a dialect check, so the SQLite-based
 test suite skips them.
+
+## Row-Level Security
+
+The `enable_row_level_security` migration creates a restricted runtime role
+(`lexmind_app`) and RLS policies scoped by the `app.current_org` setting. It
+reads the role password from `APP_DB_PASSWORD` (default `lexmind_app`), so set
+that when running migrations against Postgres:
+
+```bash
+APP_DB_PASSWORD=<password> uv run alembic upgrade head
+```
+
+The application then connects with `DATABASE_URL` (privileged: migrations + auth
+bootstrap) and `APP_DATABASE_URL` (restricted `lexmind_app`: tenant requests).
+In Docker Compose the `migrate` service runs this automatically before `api`.
