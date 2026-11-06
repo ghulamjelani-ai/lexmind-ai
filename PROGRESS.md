@@ -17,13 +17,13 @@ Single source of truth for status. A box is checked only when the feature is **i
 - [x] Tests: auth, authorization, cross-tenant isolation + MFA, password reset, invites (25 passing, SQLite in-memory); + Postgres RLS integration suite
 
 ## Phase 2 — Law Chamber Management
-- [ ] Case management (full profile, categories+custom, timeline, search/filter/sort/pagination)
-- [ ] Clients + conflict-of-interest; assignments/transfers
+- [x] Case management — full profile (categories+custom, court/FIR/district fields), status/priority, append-only timeline, assignments (primary/supporting), parties, notes, search/filter/sort/pagination. Scope-aware access (RBAC assigned/own/all enforced per case). RLS on all new tenant tables. Verified on Postgres end-to-end
+- [x] Clients + conflict-of-interest — CRUD (CNIC encrypted at rest), name/opposing-party conflict check
 - [ ] Documents (upload, validation, malware scan, storage, versioning, permissions, preview)
 - [ ] Tasks + approvals
 - [ ] Hearings + calendar (unconfirmed-date honesty rule)
 - [ ] Notifications (in-app + email)
-- [ ] Tests: CRUD, per-module authz, upload security, assignment scoping
+- [~] Tests: cases + clients covered (CRUD, per-module authz, scope/assignment, tenant isolation, conflict, timeline — 36 SQLite + 4 PG). Upload security pending with documents module
 
 ## Phase 3 — AI Foundation
 - [ ] `ai_gateway` + configurable LLM provider + embeddings

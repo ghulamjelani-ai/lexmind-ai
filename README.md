@@ -10,7 +10,9 @@ LexMind helps a chamber manage every case, understand complex matters, research 
 
 ## Status
 
-✅ **Phase 1 — Foundation (complete).** Multi-tenant identity (organizations, users, roles, invites), Argon2id auth with server-side sessions, MFA (TOTP), secure password reset, an RBAC engine + permission catalog, Alembic migrations, and a **PostgreSQL Row-Level Security backstop** (restricted runtime role + per-request `app.current_org` GUC). Frontend **dashboard shell**: cookie-based login, role-filtered sidebar, and a working Users page — verified live in-browser end-to-end against the backend. 25 unit tests (SQLite) + a Postgres RLS integration suite. Next: **Phase 2 — Law Chamber Management** (cases, clients, documents, hearings, tasks). See [PROGRESS.md](PROGRESS.md).
+✅ **Phase 1 — Foundation (complete).** Multi-tenant identity, Argon2id auth + sessions, MFA (TOTP), password reset, RBAC engine + permission catalog, Alembic migrations, a **PostgreSQL Row-Level Security backstop**, and a frontend **dashboard shell** (cookie login, role-filtered sidebar, Users page) — verified live in-browser.
+
+🟢 **Phase 2 — Law Chamber Management (in progress).** **Case management** (full profile, categories, status/priority, append-only timeline, assignments, parties, notes, search/filter/sort/pagination, scope-aware RBAC access) and **clients** (CRUD with encrypted CNIC + conflict-of-interest checks) are built and verified end-to-end on Postgres. 36 unit tests (SQLite) + 4 Postgres RLS integration tests. Remaining Phase 2: documents, hearings/calendar, tasks/approvals, notifications. See [PROGRESS.md](PROGRESS.md).
 
 ## Architecture documents
 
