@@ -12,7 +12,9 @@ LexMind helps a chamber manage every case, understand complex matters, research 
 
 ✅ **Phase 1 — Foundation (complete).** Multi-tenant identity, Argon2id auth + sessions, MFA (TOTP), password reset, RBAC engine + permission catalog, Alembic migrations, a **PostgreSQL Row-Level Security backstop**, and a frontend **dashboard shell** (cookie login, role-filtered sidebar, Users page) — verified live in-browser.
 
-✅ **Phase 2 — Law Chamber Management (complete).** Cases (full profile, timeline, assignments, parties, notes, search/filter/sort/pagination, scope-aware RBAC), clients (encrypted CNIC + conflict-of-interest), documents (private storage, versioning, permission-gated download), hearings + calendar (unconfirmed-until-matched rule), tasks, a generic approval workflow, and in-app notifications — all tenant-isolated via RLS. Frontend **Cases UI** (list, create, detail with timeline) verified live in-browser. 49 unit tests (SQLite) + 4 Postgres RLS integration tests. Next: **Phase 3 — AI Foundation** (ai_gateway, embeddings, RAG, chatbot). See [PROGRESS.md](PROGRESS.md).
+✅ **Phase 2 — Law Chamber Management (complete).** Cases, clients (encrypted CNIC + conflict-of-interest), documents (private storage + versioning), hearings + calendar, tasks, approvals, and in-app notifications — all tenant-isolated via RLS, with a frontend Cases UI.
+
+🟢 **Phase 3 — AI Foundation (in progress).** A provider-agnostic **`ai_gateway`** (authorization → authorized retrieval → prompt-injection sandbox → provider → source citations → audit), a configurable LLM provider (a **mock provider** runs with no API key for dev/tests; real providers plug in), a **RAG** ingestion + retrieval pipeline with per-request authorization filtering (case documents never leak into general chat or across tenants), a **chatbot** (general + case modes, conversations, citations), and a frontend **AI Assistant UI**. 56 unit tests (SQLite) + 4 Postgres RLS integration tests; verified live on Postgres. Remaining: wiring a real LLM provider (needs a provider + API key), pgvector-native retrieval, OCR, and streaming. See [PROGRESS.md](PROGRESS.md).
 
 ## Architecture documents
 

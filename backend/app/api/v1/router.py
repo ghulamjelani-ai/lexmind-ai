@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.v1 import (
+    ai,
     approvals,
     auth,
     cases,
@@ -28,3 +29,4 @@ api_router.include_router(tasks.router)
 api_router.include_router(approvals.router)
 api_router.include_router(notifications.router)
 api_router.include_router(documents.router)
+api_router.include_router(ai.router)

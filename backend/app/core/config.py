@@ -39,6 +39,17 @@ class Settings(BaseSettings):
     # MFA
     mfa_issuer: str = "LexMind AI"
 
+    # AI. Provider is configurable; "mock" needs no API key (dev/tests). Real
+    # providers read their key from the environment and are selected per
+    # deployment / per chamber. No vendor lock-in (see docs/architecture/08).
+    ai_provider: str = "mock"
+    ai_api_key: str = ""
+    ai_chat_model: str = "mock-chat"
+    ai_embedding_model: str = "mock-embed"
+    ai_embedding_dim: int = 64
+    # Max retrieved chunks fed to the model as grounding context.
+    ai_retrieval_top_k: int = 5
+
     # Password reset / invite token lifetimes
     password_reset_ttl_minutes: int = 60
     invite_ttl_hours: int = 168  # 7 days

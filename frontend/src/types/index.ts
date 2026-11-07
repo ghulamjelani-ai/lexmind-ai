@@ -63,3 +63,27 @@ export interface CaseEvent {
   payload_json: Record<string, unknown>;
   occurred_at: string;
 }
+
+export interface Conversation {
+  id: string;
+  mode: string;
+  case_id: string | null;
+  title: string;
+  created_at: string;
+}
+
+export interface Citation {
+  chunk_id: string;
+  source_ref: string | null;
+  quoted_text: string;
+  verification_status: string;
+}
+
+export interface AiChatMessage {
+  id: string;
+  conversation_id: string;
+  role: string;
+  content: string;
+  citations_json: Citation[];
+  created_at: string;
+}

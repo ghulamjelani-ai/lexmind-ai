@@ -5,7 +5,18 @@
  * credentials. localhost:3000 and localhost:8000 are same-site (both localhost),
  * so the SameSite=Lax cookie is sent cross-origin in dev.
  */
-import type { Case, CaseEvent, Invite, Me, Organization, Page, Role, User } from "@/types";
+import type {
+  AiChatMessage,
+  Case,
+  CaseEvent,
+  Conversation,
+  Invite,
+  Me,
+  Organization,
+  Page,
+  Role,
+  User,
+} from "@/types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const V1 = `${BASE}/api/v1`;
@@ -97,6 +108,23 @@ export const api = {
 
   addCaseNote: (id: string, note: string) =>
     request<CaseEvent>(`/cases/${id}/notes`, { method: "POST", body: JSON.stringify({ note }) }),
+
+  aiListConversations: () => request<Conversation[]>("/ai/conversations"),
+
+  aiCreateConversation: (mode: string, case_id?: string) =>
+    request<Conversation>("/ai/conversations", {
+      method: "POST",
+      body: JSON.stringify({ mode, case_id: case_id ?? null }),
+    }),
+
+  aiMessages: (conversationId: string) =>
+    request<AiChatMessage[]>(`/ai/conversations/${conversationId}/messages`),
+
+  aiAsk: (conversationId: string, question: string) =>
+    request<{ message: AiChatMessage }>(`/ai/conversations/${conversationId}/ask`, {
+      method: "POST",
+      body: JSON.stringify({ question }),
+    }),
 };
 
 export const CASE_CATEGORIES = [

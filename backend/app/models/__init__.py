@@ -2,6 +2,7 @@
 which Alembic autogenerate and create_all rely on.
 """
 
+from app.models.ai import AiConversation, AiMessage
 from app.models.approval import Approval
 from app.models.audit import AuditLog
 from app.models.auth import Invite, UserSession
@@ -9,6 +10,7 @@ from app.models.case import Case, CaseAssignment, CaseEvent, CaseParty
 from app.models.client import Client
 from app.models.document import Document, DocumentVersion
 from app.models.hearing import Hearing
+from app.models.knowledge import KbChunk, KbDocument
 from app.models.notification import Notification
 from app.models.organization import Organization
 from app.models.password_reset import PasswordResetToken
@@ -17,6 +19,8 @@ from app.models.task import Task
 from app.models.user import User
 
 __all__ = [
+    "AiConversation",
+    "AiMessage",
     "Approval",
     "AuditLog",
     "Invite",
@@ -29,6 +33,8 @@ __all__ = [
     "Document",
     "DocumentVersion",
     "Hearing",
+    "KbChunk",
+    "KbDocument",
     "Notification",
     "Organization",
     "PasswordResetToken",
