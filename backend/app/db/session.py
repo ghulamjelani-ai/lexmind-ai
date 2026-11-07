@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -63,17 +63,30 @@ SessionLocal = AuthSessionLocal
 
 
 def set_current_org(session: Session, organization_id) -> None:
-    """Set the tenant GUC for RLS on a PostgreSQL session (no-op elsewhere)."""
-    if session.bind is not None and session.bind.dialect.name == "postgresql":
-        session.execute(
-            text("SELECT set_config('app.current_org', :org, false)"),
-            {"org": str(organization_id)},
-        )
+    """Record the tenant org on the session; the after_begin listener applies it
+    to every transaction on the session's connection (PostgreSQL only).
+
+    Stored on session.info (not a contextvar) because FastAPI runs sync
+    dependencies in separate threadpool threads, across which contextvars do not
+    propagate — but the same Session object is shared for the whole request.
+    """
+    session.info["current_org"] = str(organization_id)
 
 
 def reset_current_org(session: Session) -> None:
-    if session.bind is not None and session.bind.dialect.name == "postgresql":
-        session.execute(text("SELECT set_config('app.current_org', '', false)"))
+    session.info.pop("current_org", None)
+
+
+@event.listens_for(Session, "after_begin")
+def _apply_tenant_guc(session, transaction, connection) -> None:
+    """On each transaction, set app.current_org (transaction-local) so RLS scopes
+    rows to the caller's org — even after a commit swaps the pooled connection."""
+    if connection.dialect.name != "postgresql":
+        return
+    org = session.info.get("current_org")
+    if org:
+        # org is a server-generated UUID string (never raw user input).
+        connection.exec_driver_sql(f"SELECT set_config('app.current_org', '{org}', true)")
 
 
 def get_db() -> Generator[Session, None, None]:
