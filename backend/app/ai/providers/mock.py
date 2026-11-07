@@ -23,7 +23,9 @@ class MockProvider:
 
     def chat(self, messages: list[ChatMessage]) -> str:
         user = next((m.content for m in reversed(messages) if m.role == "user"), "")
-        has_context = any("CONTEXT" in m.content for m in messages if m.role == "system")
+        # Detect actual grounding blocks (the sandbox fence), not the word
+        # "CONTEXT" in the system instruction.
+        has_context = any("BEGIN CONTEXT" in m.content for m in messages if m.role == "system")
         grounding = (
             "Based on the provided case documents, "
             if has_context
