@@ -9,7 +9,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CHAR, DateTime, ForeignKey, String, func
+from sqlalchemy import CHAR, JSON, DateTime, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, declared_attr, mapped_column
 from sqlalchemy.types import TypeDecorator
@@ -45,6 +45,30 @@ class GUID(TypeDecorator):
         if isinstance(value, uuid.UUID):
             return value
         return uuid.UUID(str(value))
+
+
+class Vector(TypeDecorator):
+    """Portable embedding column: native pgvector on PostgreSQL (ANN-indexable),
+    JSON list elsewhere (SQLite tests). Stores/returns a plain list[float]."""
+
+    impl = JSON
+    cache_ok = True
+
+    def __init__(self, dim: int = 64) -> None:
+        self.dim = dim
+        super().__init__()
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "postgresql":
+            from pgvector.sqlalchemy import Vector as PGVector
+
+            return dialect.type_descriptor(PGVector(self.dim))
+        return dialect.type_descriptor(JSON())
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        return list(value)
 
 
 class Base(DeclarativeBase):
@@ -94,6 +118,7 @@ class TenantMixin:
 __all__ = [
     "Base",
     "GUID",
+    "Vector",
     "UUIDMixin",
     "TimestampMixin",
     "SoftDeleteMixin",

@@ -12,11 +12,12 @@ import math
 import uuid
 from dataclasses import dataclass
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.ai.providers import get_provider
 from app.core.rbac import AuthContext
+from app.db.session import IS_POSTGRES
 from app.models.knowledge import KbChunk, KbDocument
 
 CHUNK_SIZE = 800
@@ -70,7 +71,7 @@ def ingest(
                 case_id=case_id,
                 chunk_index=i,
                 text=piece,
-                embedding_json=emb,
+                embedding=emb,
             )
         )
     db.flush()
@@ -112,15 +113,11 @@ def retrieve(
         case documents never leak into general chat.
     The caller's access to `case_id` itself is verified by the gateway first.
     """
-    conditions = [KbChunk.organization_id == ctx.organization_id]
+    conditions = [KbChunk.organization_id == ctx.organization_id, KbChunk.embedding.is_not(None)]
     if case_id is not None:
         conditions.append((KbChunk.case_id == case_id) | (KbChunk.case_id.is_(None)))
     else:
         conditions.append(KbChunk.case_id.is_(None))
-
-    rows = db.scalars(select(KbChunk).where(*conditions)).all()
-    if not rows:
-        return []
 
     query_emb = get_provider().embed([query])[0]
     doc_refs = {
@@ -130,16 +127,30 @@ def retrieve(
         ).all()
     }
 
-    scored = [
-        RetrievedChunk(
+    def _to_result(c: KbChunk, score: float) -> RetrievedChunk:
+        return RetrievedChunk(
             chunk_id=c.id,
             kb_document_id=c.kb_document_id,
             case_id=c.case_id,
             text=c.text,
-            score=_cosine(query_emb, c.embedding_json),
+            score=score,
             source_ref=doc_refs.get(c.kb_document_id),
         )
-        for c in rows
-    ]
+
+    if IS_POSTGRES:
+        # Native pgvector cosine-distance ordering (uses the ANN index).
+        qv = "[" + ",".join(f"{x:.8f}" for x in query_emb) + "]"
+        stmt = (
+            select(KbChunk)
+            .where(*conditions)
+            .order_by(text("embedding <=> (:qv)::vector"))
+            .limit(top_k)
+        )
+        rows = db.execute(stmt, {"qv": qv}).scalars().all()
+        return [_to_result(c, 0.0) for c in rows]
+
+    # SQLite / other: in-process cosine over the authorized chunk set.
+    rows = db.scalars(select(KbChunk).where(*conditions)).all()
+    scored = [_to_result(c, _cosine(query_emb, c.embedding or [])) for c in rows]
     scored.sort(key=lambda r: r.score, reverse=True)
     return scored[:top_k]

@@ -28,13 +28,13 @@ Single source of truth for status. A box is checked only when the feature is **i
 
 ## Phase 3 — AI Foundation (in progress)
 - [x] `ai_gateway` (single entry: authz → retrieval → sandbox → provider → citations → audit) + configurable provider (mock needs no key; real providers plug in) + embeddings abstraction
-- [~] RAG ingestion pipeline (chunk → embed → store with access metadata). Embeddings stored as JSON + in-process cosine for now; **pgvector-native column + ANN index + OCR/extraction are the next swap-in** (retrieval authz logic unchanged)
-- [x] Retrieval with per-request authorization filtering (case-mode = that case + org-wide; general-mode = org-wide only, case docs never leak)
+- [x] RAG ingestion pipeline (chunk → embed → store with access metadata). **Native pgvector** column + HNSW cosine index on Postgres (portable Vector type falls back to JSON on SQLite for tests); OCR/extraction still deferred
+- [x] Retrieval with per-request authorization filtering (case-mode = that case + org-wide; general-mode = org-wide only, case docs never leak). Postgres uses the pgvector `<=>` ANN operator; SQLite uses in-process cosine
 - [x] AI chatbot (general + case mode), conversations + messages, citations (marked unverified). Streaming + feedback deferred
 - [x] Prompt-injection sandbox (untrusted content wrapped as delimited data, never instructions)
 - [x] Frontend AI Assistant UI (conversation list, general/case mode, chat, citation notice)
 - [x] Tests: retrieval authorization, cross-tenant KB isolation, general-mode leak-prevention, case-access gating, injection-as-data — 56 SQLite + 4 PG; verified live on Postgres (mock provider). Full injection *eval suite* against a real model deferred
-- [ ] REMAINING: real LLM provider wiring (needs provider + API key), pgvector-native retrieval, OCR/text-extraction on uploads, streaming responses
+- [ ] REMAINING: real LLM provider wiring (needs provider + API key), OCR/text-extraction on uploads, streaming responses
 
 ## Phase 4 — Legal Intelligence
 - [ ] Official legal web-source clients + verification pipeline

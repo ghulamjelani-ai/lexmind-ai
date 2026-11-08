@@ -5,7 +5,10 @@ import uuid
 from sqlalchemy import JSON, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import GUID, Base, TenantMixin, TimestampMixin, UUIDMixin
+from app.core.config import get_settings
+from app.db.base import GUID, Base, TenantMixin, TimestampMixin, UUIDMixin, Vector
+
+_EMBED_DIM = get_settings().ai_embedding_dim
 
 
 class KbDocument(UUIDMixin, TimestampMixin, TenantMixin, Base):
@@ -43,4 +46,5 @@ class KbChunk(UUIDMixin, TimestampMixin, TenantMixin, Base):
     case_id: Mapped[uuid.UUID | None] = mapped_column(GUID(), index=True, nullable=True)
     chunk_index: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=False)
-    embedding_json: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    # Native pgvector on Postgres (ANN-indexed), JSON list on SQLite.
+    embedding: Mapped[list | None] = mapped_column(Vector(_EMBED_DIM), nullable=True)
