@@ -39,14 +39,24 @@ class Settings(BaseSettings):
     # MFA
     mfa_issuer: str = "LexMind AI"
 
-    # AI. Provider is configurable; "mock" needs no API key (dev/tests). Real
-    # providers read their key from the environment and are selected per
-    # deployment / per chamber. No vendor lock-in (see docs/architecture/08).
+    # AI. Chat and embeddings are chosen independently; "mock" needs no API key
+    # (dev/tests). Keys live in the environment, selectable per deployment/chamber.
+    # No vendor lock-in (see docs/architecture/08).
+
+    # Chat model provider: "mock" | "openai"
     ai_provider: str = "mock"
-    ai_api_key: str = ""
-    ai_chat_model: str = "mock-chat"
-    ai_embedding_model: str = "mock-embed"
-    ai_embedding_dim: int = 64
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4o-mini"
+    # Optional: override the base URL (Azure OpenAI, a gateway/proxy, etc.)
+    openai_base_url: str = ""
+
+    # Embedding provider: "mock" | "voyage"
+    embedding_provider: str = "mock"
+    voyage_api_key: str = ""
+    voyage_model: str = "voyage-law-2"
+    # Must match the embedding model's output dimension (voyage-law-2 = 1024).
+    ai_embedding_dim: int = 1024
+
     # Max retrieved chunks fed to the model as grounding context.
     ai_retrieval_top_k: int = 5
 

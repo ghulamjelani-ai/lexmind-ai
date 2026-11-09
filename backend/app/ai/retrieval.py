@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
-from app.ai.providers import get_provider
+from app.ai import embeddings
 from app.core.rbac import AuthContext
 from app.db.session import IS_POSTGRES
 from app.models.knowledge import KbChunk, KbDocument
@@ -62,8 +62,8 @@ def ingest(
     db.flush()
 
     pieces = chunk_text(text)
-    embeddings = get_provider().embed(pieces)
-    for i, (piece, emb) in enumerate(zip(pieces, embeddings, strict=True)):
+    vectors = embeddings.embed(pieces, input_type="document")
+    for i, (piece, emb) in enumerate(zip(pieces, vectors, strict=True)):
         db.add(
             KbChunk(
                 organization_id=ctx.organization_id,
@@ -119,7 +119,7 @@ def retrieve(
     else:
         conditions.append(KbChunk.case_id.is_(None))
 
-    query_emb = get_provider().embed([query])[0]
+    query_emb = embeddings.embed([query], input_type="query")[0]
     doc_refs = {
         d.id: d.source_ref
         for d in db.scalars(

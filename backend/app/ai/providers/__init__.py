@@ -19,13 +19,14 @@ def get_provider() -> LLMProvider:
         name = settings.ai_provider.lower()
         if name == "mock":
             _provider = MockProvider(dim=settings.ai_embedding_dim)
+        elif name == "openai":
+            from app.ai.providers.openai_provider import OpenAIProvider
+
+            _provider = OpenAIProvider()
         else:
-            # Real providers (e.g. an OpenAI/Anthropic-compatible client) register
-            # here, reading settings.ai_api_key. Until one is wired, fail loudly
-            # rather than silently degrading.
             raise ValueError(
-                f"AI provider '{name}' is not wired yet. Set AI_PROVIDER=mock for "
-                "dev, or add the provider implementation in app/ai/providers/."
+                f"Unknown AI_PROVIDER '{name}'. Use 'mock' or 'openai' "
+                "(or add a provider in app/ai/providers/)."
             )
     return _provider
 
