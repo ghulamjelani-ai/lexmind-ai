@@ -125,6 +125,42 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ question }),
     }),
+
+  /** Stream the assistant's reply via SSE. Calls onDelta per token and onDone at the end. */
+  aiAskStream: async (
+    conversationId: string,
+    question: string,
+    onDelta: (text: string) => void,
+    onDone: (ev: { message_id?: string; citations?: unknown[] }) => void,
+  ): Promise<void> => {
+    const res = await fetch(`${V1}/ai/conversations/${conversationId}/ask/stream`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question }),
+    });
+    if (!res.ok || !res.body) {
+      throw new ApiError(res.status, res.statusText);
+    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      let idx: number;
+      while ((idx = buf.indexOf("\n\n")) >= 0) {
+        const line = buf.slice(0, idx).trim();
+        buf = buf.slice(idx + 2);
+        if (!line.startsWith("data:")) continue;
+        const ev = JSON.parse(line.slice(5).trim());
+        if (ev.delta) onDelta(ev.delta as string);
+        else if (ev.error) throw new Error(ev.error as string);
+        else if (ev.done) onDone(ev);
+      }
+    }
+  },
 };
 
 export const CASE_CATEGORIES = [

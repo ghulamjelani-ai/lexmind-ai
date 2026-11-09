@@ -4,6 +4,7 @@ methods; everything above (gateway, RAG, chatbot) depends only on this.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -19,6 +20,10 @@ class LLMProvider(Protocol):
 
     def chat(self, messages: list[ChatMessage]) -> str:
         """Return the assistant's reply for a conversation."""
+        ...
+
+    def stream_chat(self, messages: list[ChatMessage]) -> Iterator[str]:
+        """Yield the assistant's reply as text deltas."""
         ...
 
     def embed(self, texts: list[str]) -> list[list[float]]:

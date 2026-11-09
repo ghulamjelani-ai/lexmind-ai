@@ -37,14 +37,15 @@ class AiAnswer:
     citations: list[dict] = field(default_factory=list)
 
 
-def ask(
+def _prepare(
     db: Session,
     ctx: AuthContext,
-    *,
     question: str,
-    mode: str = "general",
-    case_id: uuid.UUID | None = None,
-) -> AiAnswer:
+    mode: str,
+    case_id: uuid.UUID | None,
+) -> tuple[list[ChatMessage], list[dict], str]:
+    """Shared path for ask/ask_stream: authorize, retrieve, build the prompt and
+    citations, audit. Returns (messages, citations, action_label)."""
     settings = get_settings()
 
     # 1. Authorization: case mode requires access to that specific case.
@@ -77,10 +78,7 @@ def ask(
         system = f"{system}\n\n{blocks}"
     messages = [ChatMessage("system", system), ChatMessage("user", question)]
 
-    # 4. Provider call.
-    answer = get_provider().chat(messages)
-
-    # 5. Citations (internal KB chunks are 'unverified' — not official sources).
+    # 4. Citations (internal KB chunks are 'unverified' — not official sources).
     citations = [
         {
             "chunk_id": str(c.chunk_id),
@@ -101,4 +99,32 @@ def ask(
         resource_id=str(case_id) if case_id else None,
         metadata={"mode": mode, "provider": get_provider().name, "chunks": len(chunks)},
     )
+    return messages, citations, "ai.ask"
+
+
+def ask(
+    db: Session,
+    ctx: AuthContext,
+    *,
+    question: str,
+    mode: str = "general",
+    case_id: uuid.UUID | None = None,
+) -> AiAnswer:
+    messages, citations, _ = _prepare(db, ctx, question, mode, case_id)
+    answer = get_provider().chat(messages)
     return AiAnswer(content=answer, citations=citations)
+
+
+def ask_stream(
+    db: Session,
+    ctx: AuthContext,
+    *,
+    question: str,
+    mode: str = "general",
+    case_id: uuid.UUID | None = None,
+):
+    """Authorize + retrieve eagerly (so auth errors raise here), then return
+    (citations, delta_iterator). The provider call starts when the iterator is
+    first consumed."""
+    messages, citations, _ = _prepare(db, ctx, question, mode, case_id)
+    return citations, get_provider().stream_chat(messages)

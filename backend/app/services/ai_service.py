@@ -95,3 +95,43 @@ def ask(db: Session, ctx: AuthContext, conv: AiConversation, question: str) -> A
     db.add(msg)
     db.flush()
     return msg
+
+
+def begin_stream(db: Session, ctx: AuthContext, conv: AiConversation, question: str):
+    """Persist the user's message and start the AI stream. Authorization and
+    retrieval happen here (eagerly), so an AiAuthorizationError raises before any
+    streaming. Returns (citations, delta_iterator)."""
+    db.add(
+        AiMessage(
+            organization_id=ctx.organization_id,
+            conversation_id=conv.id,
+            role="user",
+            content=question,
+        )
+    )
+    if _count(db, conv) == 0:
+        conv.title = question[:60]
+    db.flush()
+
+    citations, stream = gateway.ask_stream(
+        db, ctx, question=question, mode=conv.mode, case_id=conv.case_id
+    )
+    db.commit()  # persist the user message + audit before streaming begins
+    return citations, stream
+
+
+def finish_stream(
+    db: Session, ctx: AuthContext, conv: AiConversation, content: str, citations: list[dict]
+) -> AiMessage:
+    """Persist the fully-streamed assistant message."""
+    msg = AiMessage(
+        organization_id=ctx.organization_id,
+        conversation_id=conv.id,
+        role="assistant",
+        content=content,
+        citations_json=citations,
+    )
+    db.add(msg)
+    db.commit()
+    db.refresh(msg)
+    return msg

@@ -6,6 +6,8 @@ replies; embeddings go through app.ai.embeddings (Voyage), not here.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 from app.ai.providers.base import ChatMessage
 from app.core.config import get_settings
 
@@ -34,6 +36,19 @@ class OpenAIProvider:
             messages=[{"role": m.role, "content": m.content} for m in messages],
         )
         return resp.choices[0].message.content or ""
+
+    def stream_chat(self, messages: list[ChatMessage]) -> Iterator[str]:
+        stream = self._client.chat.completions.create(
+            model=self._model,
+            messages=[{"role": m.role, "content": m.content} for m in messages],
+            stream=True,
+        )
+        for chunk in stream:
+            if not chunk.choices:
+                continue
+            delta = chunk.choices[0].delta.content
+            if delta:
+                yield delta
 
     def embed(self, texts: list[str]) -> list[list[float]]:  # pragma: no cover
         raise NotImplementedError("OpenAIProvider is chat-only; use app.ai.embeddings")

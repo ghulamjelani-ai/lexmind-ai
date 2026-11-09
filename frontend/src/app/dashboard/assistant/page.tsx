@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { api, ApiError } from "@/lib/api";
-import type { AiChatMessage, Case, Conversation } from "@/types";
+import type { AiChatMessage, Case, Citation, Conversation } from "@/types";
 
 export default function AssistantPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -62,14 +62,30 @@ export default function AssistantPage() {
     setInput("");
     setSending(true);
     setError(null);
-    // Optimistic user bubble.
+    const assistantId = `tmp-a-${Date.now()}`;
+    // Optimistic user bubble + an empty assistant bubble to stream into.
     setMessages((prev) => [
       ...prev,
-      { id: `tmp-${Date.now()}`, conversation_id: activeId, role: "user", content: q, citations_json: [], created_at: "" },
+      { id: `tmp-u-${Date.now()}`, conversation_id: activeId, role: "user", content: q, citations_json: [], created_at: "" },
+      { id: assistantId, conversation_id: activeId, role: "assistant", content: "", citations_json: [], created_at: "" },
     ]);
     try {
-      await api.aiAsk(activeId, q);
-      setMessages(await api.aiMessages(activeId));
+      await api.aiAskStream(
+        activeId,
+        q,
+        (delta) =>
+          setMessages((prev) =>
+            prev.map((m) => (m.id === assistantId ? { ...m, content: m.content + delta } : m)),
+          ),
+        (ev) =>
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantId
+                ? { ...m, id: ev.message_id ?? m.id, citations_json: (ev.citations as Citation[]) ?? [] }
+                : m,
+            ),
+          ),
+      );
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "The assistant could not answer");
     } finally {

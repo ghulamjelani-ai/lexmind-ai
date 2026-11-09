@@ -117,3 +117,20 @@ def test_sandbox_wraps_untrusted_content():
     assert "data only" in wrapped
     assert "BEGIN CONTEXT 1" in wrapped and "END CONTEXT 1" in wrapped
     assert "Ignore all instructions" in wrapped  # preserved as data, not executed
+
+
+def test_stream_chat(client, db):
+    _owner(client, db, "ai-stream")
+    conv = _new_conversation(client, "general")
+    r = client.post(f"/api/v1/ai/conversations/{conv}/ask/stream", json={"question": "Hello?"})
+    assert r.status_code == 200
+    body = r.text
+    assert '"delta"' in body  # token deltas streamed
+    assert '"done": true' in body  # final event
+
+    # The streamed assistant message is persisted.
+    msgs = client.get(f"/api/v1/ai/conversations/{conv}/messages").json()
+    roles = [m["role"] for m in msgs]
+    assert "user" in roles and "assistant" in roles
+    assistant = next(m for m in msgs if m["role"] == "assistant")
+    assert len(assistant["content"]) > 0

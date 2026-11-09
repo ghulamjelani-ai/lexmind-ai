@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import math
 import re
+from collections.abc import Iterator
 
 from app.ai.providers.base import ChatMessage
 
@@ -36,6 +37,10 @@ class MockProvider:
             f"{user.strip()[:200]}. A qualified lawyer must verify any legal "
             "conclusion against the cited sources."
         )
+
+    def stream_chat(self, messages: list[ChatMessage]) -> Iterator[str]:
+        for word in self.chat(messages).split(" "):
+            yield word + " "
 
     def embed(self, texts: list[str]) -> list[list[float]]:
         return [self._embed_one(t) for t in texts]
