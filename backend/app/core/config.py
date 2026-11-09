@@ -46,7 +46,8 @@ class Settings(BaseSettings):
     # Chat model provider: "mock" | "openai"
     ai_provider: str = "mock"
     openai_api_key: str = ""
-    openai_model: str = "gpt-4o-mini"
+    # Current OpenAI lineup is the GPT-6 family; gpt-6.1-sol balances cost/quality.
+    openai_model: str = "gpt-6.1-sol"
     # Optional: override the base URL (Azure OpenAI, a gateway/proxy, etc.)
     openai_base_url: str = ""
 

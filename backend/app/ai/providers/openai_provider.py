@@ -26,10 +26,12 @@ class OpenAIProvider:
         self._model = settings.openai_model
 
     def chat(self, messages: list[ChatMessage]) -> str:
+        # Temperature is omitted: current reasoning models (GPT-6 family) reject a
+        # non-default temperature. Depth is controlled by the model's reasoning
+        # effort setting instead.
         resp = self._client.chat.completions.create(
             model=self._model,
             messages=[{"role": m.role, "content": m.content} for m in messages],
-            temperature=0.2,
         )
         return resp.choices[0].message.content or ""
 
