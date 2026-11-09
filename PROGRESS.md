@@ -39,10 +39,10 @@ Single source of truth for status. A box is checked only when the feature is **i
 - [x] Streaming (SSE) chat responses — token-by-token, with a final citations event; live rendering in the Assistant UI
 - [ ] REMAINING: AI hallucination / citation eval suite against a real model (Phase 4 territory)
 
-## Phase 4 — Legal Intelligence
-- [ ] Official legal web-source clients + verification pipeline
-- [ ] Legislation verification + judgment retrieval
-- [ ] Legal research agent (mandatory citation format)
+## Phase 4 — Legal Intelligence (in progress)
+- [x] Foundation: official PK source registry (Pakistan Code, Punjab Laws, SC, LHC, PJA); legislation + judgment reference models with verification_status (verified/pending/unverified/conflicting), source_url, retrieved_at; create/list/verify endpoints; references start "pending" and are never auto-verified (non-fabrication spine). RLS on both tables; tests incl. tenant isolation
+- [ ] Official legal web-source clients + automated verification pipeline (needs a decision: search-API vs per-source clients, and respect robots/ToS — degrade to manual links)
+- [ ] Legal research agent (mandatory citation format, verification-tagged)
 - [ ] Case analysis (18-section report) + evidence analysis + approval gates
 - [ ] Tests: citation verification accuracy, hallucination evals, non-fabrication guarantees
 

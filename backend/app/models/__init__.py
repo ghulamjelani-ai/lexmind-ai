@@ -11,6 +11,7 @@ from app.models.client import Client
 from app.models.document import Document, DocumentVersion
 from app.models.hearing import Hearing
 from app.models.knowledge import KbChunk, KbDocument
+from app.models.legal import Judgment, LegalProvision
 from app.models.notification import Notification
 from app.models.organization import Organization
 from app.models.password_reset import PasswordResetToken
@@ -33,8 +34,10 @@ __all__ = [
     "Document",
     "DocumentVersion",
     "Hearing",
+    "Judgment",
     "KbChunk",
     "KbDocument",
+    "LegalProvision",
     "Notification",
     "Organization",
     "PasswordResetToken",
