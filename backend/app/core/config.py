@@ -86,6 +86,13 @@ class Settings(BaseSettings):
     # Max upload size in bytes (default 25 MB).
     max_upload_bytes: int = 25 * 1024 * 1024
 
+    # OCR for scanned images / image-only PDFs. Needs the Tesseract binary
+    # installed (and Poppler for scanned PDFs). When unavailable, OCR is skipped
+    # gracefully. tesseract_cmd/poppler_path override auto-detection on Windows.
+    ocr_enabled: bool = True
+    tesseract_cmd: str = ""
+    poppler_path: str = ""
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]

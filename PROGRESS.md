@@ -29,13 +29,15 @@ Single source of truth for status. A box is checked only when the feature is **i
 ## Phase 3 — AI Foundation (in progress)
 - [x] `ai_gateway` (single entry: authz → retrieval → sandbox → provider → citations → audit) + configurable provider (mock needs no key; real providers plug in) + embeddings abstraction
 - [x] RAG ingestion pipeline (chunk → embed → store with access metadata). **Native pgvector** column + HNSW cosine index on Postgres (portable Vector type falls back to JSON on SQLite for tests)
-- [x] Document → KB indexing: extract text from uploaded docs (txt/PDF/DOCX) and ingest into the KB (`POST /documents/{id}/index`), so uploaded case documents become grounding for case-mode chat. OCR for scanned images still deferred (needs Tesseract)
+- [x] Document → KB indexing: extract text from uploaded docs (txt/PDF/DOCX) and ingest into the KB (`POST /documents/{id}/index`), so uploaded case documents become grounding for case-mode chat
+- [x] OCR for scanned images / image-only PDFs (Tesseract + Poppler) — gracefully skips when the binaries aren't installed; configurable via OCR_ENABLED / TESSERACT_CMD / POPPLER_PATH
 - [x] Retrieval with per-request authorization filtering (case-mode = that case + org-wide; general-mode = org-wide only, case docs never leak). Postgres uses the pgvector `<=>` ANN operator; SQLite uses in-process cosine
 - [x] AI chatbot (general + case mode), conversations + messages, citations (marked unverified). Streaming + feedback deferred
 - [x] Prompt-injection sandbox (untrusted content wrapped as delimited data, never instructions)
 - [x] Frontend AI Assistant UI (conversation list, general/case mode, chat, citation notice)
 - [x] Tests: retrieval authorization, cross-tenant KB isolation, general-mode leak-prevention, case-access gating, injection-as-data — 56 SQLite + 4 PG; verified live on Postgres (mock provider). Full injection *eval suite* against a real model deferred
-- [ ] REMAINING: real LLM provider wiring (needs provider + API key), OCR for scanned images/PDFs, streaming responses
+- [x] Streaming (SSE) chat responses — token-by-token, with a final citations event; live rendering in the Assistant UI
+- [ ] REMAINING: AI hallucination / citation eval suite against a real model (Phase 4 territory)
 
 ## Phase 4 — Legal Intelligence
 - [ ] Official legal web-source clients + verification pipeline
