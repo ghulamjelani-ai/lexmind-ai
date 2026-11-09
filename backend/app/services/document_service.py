@@ -166,6 +166,29 @@ def read_bytes(doc: Document) -> bytes:
     return get_storage().get(doc.storage_key)
 
 
+def index_into_kb(db: Session, ctx: AuthContext, doc: Document):
+    """Extract a document's text and ingest it into the knowledge base so it is
+    retrievable in case-mode AI chat. Raises DocumentError if no text could be
+    extracted (e.g. a scanned image — OCR is not available yet)."""
+    from app.ai import retrieval
+    from app.integrations.extract import extract_text
+
+    text = extract_text(doc.title, doc.mime, read_bytes(doc)).strip()
+    if not text:
+        raise DocumentError(
+            "No extractable text (scanned images need OCR, which is not available yet)"
+        )
+    return retrieval.ingest(
+        db,
+        ctx,
+        title=doc.title,
+        text=text,
+        source_type="document",
+        source_ref=str(doc.id),
+        case_id=doc.case_id,
+    )
+
+
 def soft_delete(db: Session, doc: Document) -> None:
     doc.deleted_at = datetime.now(tz=UTC)
     db.flush()

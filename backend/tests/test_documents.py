@@ -68,3 +68,42 @@ def test_document_tenant_isolation(client, db):
     assert client.get(f"/api/v1/documents/{did}").status_code == 404
     assert client.get(f"/api/v1/documents/{did}/download").status_code == 404
     assert client.get("/api/v1/documents").json()["total"] == 0
+
+
+def test_index_document_into_kb(client, db):
+    _owner(client, db, "dc-index")
+    cid = client.post(
+        "/api/v1/cases", json={"title": "Indexed case", "category": "bail"}
+    ).json()["id"]
+    body = b"The accused was granted bail under section 497 CrPC."
+    up = client.post(
+        "/api/v1/documents",
+        files={"file": ("brief.txt", body, "text/plain")},
+        data={"title": "Brief", "category": "court_order", "case_id": cid},
+    )
+    did = up.json()["id"]
+
+    r = client.post(f"/api/v1/documents/{did}/index")
+    assert r.status_code == 200, r.text
+    assert r.json()["chunks"] >= 1
+
+    # The indexed text is now grounding for case-mode AI chat.
+    conv = client.post(
+        "/api/v1/ai/conversations", json={"mode": "case", "case_id": cid}
+    ).json()["id"]
+    msg = client.post(
+        f"/api/v1/ai/conversations/{conv}/ask", json={"question": "Was bail granted?"}
+    ).json()["message"]
+    assert len(msg["citations_json"]) >= 1
+
+
+def test_index_rejects_non_text(client, db):
+    _owner(client, db, "dc-img")
+    up = client.post(
+        "/api/v1/documents",
+        files={"file": ("scan.png", b"\x89PNG\r\n\x1a\n not real image text", "image/png")},
+        data={"title": "Scan", "category": "other"},
+    )
+    did = up.json()["id"]
+    r = client.post(f"/api/v1/documents/{did}/index")
+    assert r.status_code == 400

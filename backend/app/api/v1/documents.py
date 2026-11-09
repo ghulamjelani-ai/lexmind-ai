@@ -4,13 +4,14 @@ import uuid
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.responses import Response
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_tenant_db, require
 from app.core.config import get_settings
 from app.core.rbac import AuthContext
 from app.models.case import Case
+from app.models.knowledge import KbChunk
 from app.schemas.common import Page
 from app.schemas.document import DocumentOut, DocumentVersionOut
 from app.services import case_service, document_service
@@ -128,6 +129,27 @@ async def add_version(
     db.commit()
     db.refresh(doc)
     return DocumentOut.model_validate(doc)
+
+
+@router.post("/{document_id}/index")
+def index_document(
+    document_id: uuid.UUID,
+    db: Session = Depends(get_tenant_db),
+    ctx: AuthContext = Depends(require("documents:upload")),
+) -> dict:
+    """Extract the document's text and index it into the knowledge base for RAG."""
+    doc = document_service.get_document(db, ctx, document_id)
+    if doc is None:
+        raise HTTPException(status_code=404, detail="Document not found")
+    try:
+        kb = document_service.index_into_kb(db, ctx, doc)
+    except document_service.DocumentError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    chunks = db.scalar(
+        select(func.count()).select_from(KbChunk).where(KbChunk.kb_document_id == kb.id)
+    ) or 0
+    db.commit()
+    return {"kb_document_id": str(kb.id), "chunks": chunks}
 
 
 @router.get("/{document_id}/versions", response_model=list[DocumentVersionOut])

@@ -19,6 +19,8 @@ dependencies = [
     "cryptography>=43",
     "python-multipart>=0.0.12",
     "pgvector>=0.3",
+    "pypdf>=5.0",
+    "python-docx>=1.1",
 ]
 
 [dependency-groups]
