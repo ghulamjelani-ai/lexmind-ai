@@ -14,6 +14,10 @@ import tempfile
 os.environ["DATABASE_URL"] = "sqlite://"
 os.environ["APP_DATABASE_URL"] = "sqlite://"
 os.environ["SECURE_COOKIES"] = "false"
+# Force mock AI providers so the suite is hermetic — never calls (or bills) a real
+# LLM/embedding API, even when a local .env configures openai/voyage with keys.
+os.environ["AI_PROVIDER"] = "mock"
+os.environ["EMBEDDING_PROVIDER"] = "mock"
 # Isolate document storage to a temp dir for tests.
 os.environ.setdefault("STORAGE_LOCAL_DIR", tempfile.mkdtemp(prefix="lexmind-test-storage-"))
 
