@@ -7,7 +7,20 @@ import { Card, EmptyState, PageHeader } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import type { LegalDocument } from "@/types";
 
-const CATEGORIES = ["pleading", "judgment", "statute", "contract", "evidence", "correspondence", "other"];
+const CATEGORIES = [
+  "fir",
+  "police_report",
+  "witness_statement",
+  "court_order",
+  "charge_sheet",
+  "medical_report",
+  "agreement",
+  "contract",
+  "evidence",
+  "judgment",
+  "correspondence",
+  "other",
+];
 
 function fmtSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -101,7 +114,7 @@ export default function DocumentsPage() {
           <label>
             <span className="mb-1 block text-sm font-medium text-[var(--text)]">Category</span>
             <select value={category} onChange={(e) => setCategory(e.target.value)} className="select capitalize">
-              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              {CATEGORIES.map((c) => <option key={c} value={c}>{c.replace(/_/g, " ")}</option>)}
             </select>
           </label>
           <label>
