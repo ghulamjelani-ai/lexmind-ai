@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { Card, EmptyState, PageHeader } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { Role, User } from "@/types";
@@ -34,7 +35,6 @@ export default function UsersPage() {
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -60,52 +60,38 @@ export default function UsersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Users</h1>
+      <PageHeader eyebrow="Administration" title="Users" subtitle="People in your chamber and their roles." />
 
-      {error && (
-        <p className="mt-4 rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-300">
-          {error}
-        </p>
-      )}
+      {error && <p className="mb-4 badge badge-bad w-full justify-start px-3 py-2 font-normal">{error}</p>}
 
       {canManage && (
-        <form
-          onSubmit={onCreate}
-          className="mt-6 grid grid-cols-1 gap-3 rounded-lg border border-slate-200 p-4 dark:border-slate-800 sm:grid-cols-5 sm:items-end"
-        >
-          <Input label="Full name" value={fullName} onChange={setFullName} />
-          <Input label="Email" type="email" value={email} onChange={setEmail} />
-          <Input label="Password" type="password" value={password} onChange={setPassword} />
-          <label className="block">
-            <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-              Role
-            </span>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-            >
-              {roles.map((r) => (
-                <option key={r.id} value={r.name}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button
-            type="submit"
-            disabled={creating}
-            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900"
-          >
-            {creating ? "Adding…" : "Add user"}
-          </button>
-        </form>
+        <Card className="mb-6">
+          <p className="eyebrow mb-3">Add a user</p>
+          <form onSubmit={onCreate} className="grid grid-cols-1 gap-3 sm:grid-cols-5 sm:items-end">
+            <Input label="Full name" value={fullName} onChange={setFullName} />
+            <Input label="Email" type="email" value={email} onChange={setEmail} />
+            <Input label="Password" type="password" value={password} onChange={setPassword} />
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium text-[var(--text)]">Role</span>
+              <select value={role} onChange={(e) => setRole(e.target.value)} className="select">
+                {roles.map((r) => (
+                  <option key={r.id} value={r.name}>
+                    {r.name.replace(/_/g, " ")}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button type="submit" disabled={creating} className="btn btn-primary">
+              {creating ? "Adding…" : "Add user"}
+            </button>
+          </form>
+        </Card>
       )}
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+      <div className="card overflow-hidden p-0">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-500 dark:bg-slate-900">
-            <tr>
+          <thead>
+            <tr className="border-b border-[var(--border)] bg-[var(--surface-2)]">
               <Th>Name</Th>
               <Th>Email</Th>
               <Th>Type</Th>
@@ -115,22 +101,28 @@ export default function UsersPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-slate-400">
+                <td colSpan={4} className="px-4 py-8 text-center text-sm text-[var(--muted)]">
                   Loading…
                 </td>
               </tr>
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-slate-400">
-                  No users yet.
+                <td colSpan={4} className="p-4">
+                  <EmptyState title="No users yet" />
                 </td>
               </tr>
             ) : (
               users.map((u) => (
-                <tr key={u.id} className="border-t border-slate-100 dark:border-slate-800">
-                  <Td>{u.full_name}</Td>
+                <tr key={u.id} className="border-b border-[var(--border)] last:border-0">
+                  <Td>
+                    <span className="font-medium text-[var(--text)]">{u.full_name}</span>
+                  </Td>
                   <Td>{u.email}</Td>
-                  <Td>{u.is_client ? "Client" : "Staff"}</Td>
+                  <Td>
+                    <span className={`badge ${u.is_client ? "badge-info" : "badge-muted"}`}>
+                      {u.is_client ? "Client" : "Staff"}
+                    </span>
+                  </Td>
                   <Td>{u.status}</Td>
                 </tr>
               ))
@@ -155,23 +147,21 @@ function Input({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-        {label}
-      </span>
+      <span className="mb-1 block text-sm font-medium text-[var(--text)]">{label}</span>
       <input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required
-        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+        className="input"
       />
     </label>
   );
 }
 
 function Th({ children }: { children: React.ReactNode }) {
-  return <th className="px-4 py-2 font-medium">{children}</th>;
+  return <th className="px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">{children}</th>;
 }
 function Td({ children }: { children: React.ReactNode }) {
-  return <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{children}</td>;
+  return <td className="px-4 py-3 text-[var(--muted)]">{children}</td>;
 }
