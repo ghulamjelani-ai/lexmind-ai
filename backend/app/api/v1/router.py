@@ -15,6 +15,7 @@ from app.api.v1 import (
     reports,
     roles,
     tasks,
+    tax,
     users,
 )
 
@@ -34,3 +35,4 @@ api_router.include_router(documents.router)
 api_router.include_router(ai.router)
 api_router.include_router(legal.router)
 api_router.include_router(reports.router)
+api_router.include_router(tax.router)

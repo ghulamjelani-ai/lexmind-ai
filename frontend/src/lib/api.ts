@@ -23,6 +23,8 @@ import type {
   Provision,
   ReminderDispatch,
   Role,
+  TaxAnswer,
+  TaxReference,
   User,
 } from "@/types";
 
@@ -166,6 +168,12 @@ export const api = {
 
   autoVerifyProvision: (provisionId: string) =>
     request<AutoVerifyResult>(`/legal/provisions/${provisionId}/auto-verify`, { method: "POST" }),
+
+  // --- tax intelligence ------------------------------------------------------
+  taxReference: () => request<TaxReference>("/tax/reference"),
+
+  taxAsk: (query: string) =>
+    request<TaxAnswer>("/tax/ask", { method: "POST", body: JSON.stringify({ query }) }),
 
   aiListConversations: () => request<Conversation[]>("/ai/conversations"),
 

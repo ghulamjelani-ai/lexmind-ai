@@ -40,6 +40,10 @@ export function Icon({ name, className = "h-[18px] w-[18px]" }: { name: string; 
       return <svg {...common}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>;
     case "bolt":
       return <svg {...common}><path d="M13 2 4 14h7l-1 8 9-12h-7z" /></svg>;
+    case "receipt":
+      return <svg {...common}><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z" /><path d="M9 7h6M9 11h6M9 15h4" /></svg>;
+    case "link":
+      return <svg {...common}><path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1" /><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1" /></svg>;
     default:
       return <svg {...common}><circle cx="12" cy="12" r="9" /></svg>;
   }

@@ -173,3 +173,58 @@ export interface ReminderDispatch {
   reminders_created: number;
   within_hours: number;
 }
+
+// --- Tax intelligence --------------------------------------------------------
+export interface TaxSource {
+  key: string;
+  name: string;
+  url: string;
+  kind: string;
+  note: string;
+}
+
+export interface TaxReference {
+  last_verified: string;
+  disclaimer: string;
+  filer_status: {
+    summary: string;
+    how_to_become_filer: string[];
+    non_filer_consequences: string[];
+    assets_note: string;
+    legal_basis_note: string;
+  };
+  withholding_examples: {
+    transaction: string;
+    filer: string;
+    late_filer: string;
+    non_filer: string;
+    note: string;
+  }[];
+  deadlines: {
+    tax_year: string;
+    statutory_due: string;
+    actual_due: string;
+    status: string;
+    note: string;
+  }[];
+  deadline_guidance: string;
+  ntn_registration: { summary: string; steps: string[]; documents: string[]; cost_note: string };
+  chamber_membership: {
+    summary: string;
+    classes: string[];
+    steps: string[];
+    documents: string[];
+    note: string;
+  };
+  sources: TaxSource[];
+}
+
+export interface TaxAnswer {
+  forwarded_to_ai: boolean;
+  answer: string;
+  sources: TaxSource[];
+  disclaimer: string;
+  model_used: string | null;
+  rejection_code: string | null;
+  examples: string[];
+}
