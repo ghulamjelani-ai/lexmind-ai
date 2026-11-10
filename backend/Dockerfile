@@ -22,4 +22,5 @@ RUN uv sync --no-dev
 EXPOSE 8000
 
 # Default command runs the API; the worker service overrides this in compose.
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Shell form so $PORT (injected by Railway/Render/Fly) is honored; 8000 locally.
+CMD uv run uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
