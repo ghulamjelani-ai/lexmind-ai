@@ -51,3 +51,8 @@ class CalendarItem(BaseModel):
     title: str
     at: datetime
     status: str
+
+
+class ReminderDispatchOut(BaseModel):
+    reminders_created: int
+    within_hours: int

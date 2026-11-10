@@ -16,8 +16,9 @@ from app.schemas.hearing import (
     HearingCreate,
     HearingOut,
     HearingUpdate,
+    ReminderDispatchOut,
 )
-from app.services import case_service, hearing_service
+from app.services import case_service, hearing_reminder_service, hearing_service
 
 router = APIRouter(tags=["hearings"])
 
@@ -89,6 +90,19 @@ def confirm_hearing(
     db.commit()
     db.refresh(hearing)
     return HearingOut.model_validate(hearing)
+
+
+@router.post("/hearings/reminders/dispatch", response_model=ReminderDispatchOut)
+def dispatch_reminders(
+    within_hours: int = Query(default=48, ge=1, le=336),
+    db: Session = Depends(get_tenant_db),
+    ctx: AuthContext = Depends(require("hearings:manage")),
+) -> ReminderDispatchOut:
+    """Send in-app reminders for hearings due within the window. Idempotent —
+    safe to call on a schedule; a user is reminded about a hearing only once."""
+    created = hearing_reminder_service.dispatch(db, ctx, within_hours=within_hours)
+    db.commit()
+    return ReminderDispatchOut(reminders_created=created, within_hours=within_hours)
 
 
 @router.get("/calendar", response_model=list[CalendarItem], tags=["calendar"])
