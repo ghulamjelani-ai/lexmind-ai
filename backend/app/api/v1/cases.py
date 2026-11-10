@@ -23,7 +23,8 @@ from app.schemas.case import (
 )
 from app.schemas.case_analysis import CaseAnalysisOut
 from app.schemas.common import Page
-from app.services import case_analysis_service, case_service
+from app.schemas.evidence_analysis import EvidenceAnalysisOut
+from app.services import case_analysis_service, case_service, evidence_analysis_service
 
 router = APIRouter(prefix="/cases", tags=["cases"])
 
@@ -229,6 +230,25 @@ def list_analyses(
     case = _load_case(db, ctx, case_id, "cases:read")
     rows = case_analysis_service.list_for_case(db, case)
     return [CaseAnalysisOut.model_validate(a) for a in rows]
+
+
+# --- AI evidence analysis (on-demand, not persisted) -------------------------
+@router.post("/{case_id}/evidence-analysis", response_model=EvidenceAnalysisOut)
+def analyze_evidence(
+    case_id: uuid.UUID,
+    db: Session = Depends(get_tenant_db),
+    ctx: AuthContext = Depends(require("ai:analysis:request")),
+) -> EvidenceAnalysisOut:
+    case = _load_case(db, ctx, case_id, "cases:read")
+    result = evidence_analysis_service.analyze(db, ctx, case)
+    db.commit()
+    return EvidenceAnalysisOut(
+        supporting=result.supporting,
+        contradicting=result.contradicting,
+        missing=result.missing,
+        notes=result.notes,
+        chunks_used=result.chunks_used,
+    )
 
 
 @router.post("/{case_id}/analysis/{analysis_id}/approve", response_model=CaseAnalysisOut)
