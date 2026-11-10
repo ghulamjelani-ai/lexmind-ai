@@ -6,7 +6,25 @@ Never hardcode secrets. All configuration comes from the environment
 
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _normalize_pg_url(url: str) -> str:
+    """Coerce a managed-host DSN to the psycopg3 driver.
+
+    Managed Postgres providers (Render, Railway, Heroku, Fly, …) hand out
+    ``postgres://`` or ``postgresql://`` URLs, but SQLAlchemy needs the explicit
+    ``postgresql+psycopg://`` driver here. Normalize both, and leave SQLite and
+    already-qualified URLs untouched, so DATABASE_URL works as-is on any host.
+    """
+    if not url:
+        return url
+    if url.startswith("postgres://"):
+        return "postgresql+psycopg://" + url[len("postgres://") :]
+    if url.startswith("postgresql://"):
+        return "postgresql+psycopg://" + url[len("postgresql://") :]
+    return url
 
 
 class Settings(BaseSettings):
@@ -31,6 +49,11 @@ class Settings(BaseSettings):
     session_ttl_hours: int = 72
     # Set true behind HTTPS (production); false for local http dev.
     secure_cookies: bool = False
+    # Session-cookie SameSite policy: "lax" | "strict" | "none". Use "none" (with
+    # secure_cookies=true) when the API and web are on different hosts, so the
+    # browser sends the session cookie on cross-site requests. "lax" is fine when
+    # they share a site (local dev, or api+app on one domain).
+    cookie_samesite: str = "lax"
 
     # Field encryption (Fernet key, url-safe base64). MUST be set in production;
     # empty falls back to an insecure dev key (crypto.py warns).
@@ -97,6 +120,11 @@ class Settings(BaseSettings):
     ocr_enabled: bool = True
     tesseract_cmd: str = ""
     poppler_path: str = ""
+
+    @field_validator("database_url", "app_database_url", mode="after")
+    @classmethod
+    def _normalize_db_urls(cls, v: str) -> str:
+        return _normalize_pg_url(v)
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -36,7 +36,7 @@ def _set_session_cookie(response: Response, token: str) -> None:
         max_age=settings.session_ttl_hours * 3600,
         httponly=True,
         secure=settings.secure_cookies,
-        samesite="lax",
+        samesite=settings.cookie_samesite,  # "none" for cross-host API/web in prod
         path="/",
     )
 
@@ -108,7 +108,12 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)) 
     if raw:
         auth_service.revoke_session(db, raw)
         db.commit()
-    response.delete_cookie(settings.session_cookie_name, path="/")
+    response.delete_cookie(
+        settings.session_cookie_name,
+        path="/",
+        samesite=settings.cookie_samesite,
+        secure=settings.secure_cookies,
+    )
     return MessageOut(message="Logged out")
 
 
