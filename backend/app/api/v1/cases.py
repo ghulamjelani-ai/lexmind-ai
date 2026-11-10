@@ -21,8 +21,9 @@ from app.schemas.case import (
     PartyIn,
     PartyOut,
 )
+from app.schemas.case_analysis import CaseAnalysisOut
 from app.schemas.common import Page
-from app.services import case_service
+from app.services import case_analysis_service, case_service
 
 router = APIRouter(prefix="/cases", tags=["cases"])
 
@@ -203,3 +204,45 @@ def case_timeline(
 ) -> list[EventOut]:
     case = _load_case(db, ctx, case_id, "cases:read")
     return [EventOut.model_validate(e) for e in case_service.timeline(db, case)]
+
+
+# --- AI case analysis --------------------------------------------------------
+@router.post("/{case_id}/analysis", response_model=CaseAnalysisOut, status_code=201)
+def generate_analysis(
+    case_id: uuid.UUID,
+    db: Session = Depends(get_tenant_db),
+    ctx: AuthContext = Depends(require("ai:analysis:request")),
+) -> CaseAnalysisOut:
+    case = _load_case(db, ctx, case_id, "cases:read")
+    analysis = case_analysis_service.generate(db, ctx, case)
+    db.commit()
+    db.refresh(analysis)
+    return CaseAnalysisOut.model_validate(analysis)
+
+
+@router.get("/{case_id}/analysis", response_model=list[CaseAnalysisOut])
+def list_analyses(
+    case_id: uuid.UUID,
+    db: Session = Depends(get_tenant_db),
+    ctx: AuthContext = Depends(require("cases:read")),
+) -> list[CaseAnalysisOut]:
+    case = _load_case(db, ctx, case_id, "cases:read")
+    rows = case_analysis_service.list_for_case(db, case)
+    return [CaseAnalysisOut.model_validate(a) for a in rows]
+
+
+@router.post("/{case_id}/analysis/{analysis_id}/approve", response_model=CaseAnalysisOut)
+def approve_analysis(
+    case_id: uuid.UUID,
+    analysis_id: uuid.UUID,
+    db: Session = Depends(get_tenant_db),
+    ctx: AuthContext = Depends(require("approvals:grant")),
+) -> CaseAnalysisOut:
+    _load_case(db, ctx, case_id, "cases:read")
+    analysis = case_analysis_service.get(db, ctx, analysis_id)
+    if analysis is None or analysis.case_id != case_id:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+    analysis = case_analysis_service.approve(db, ctx, analysis)
+    db.commit()
+    db.refresh(analysis)
+    return CaseAnalysisOut.model_validate(analysis)

@@ -7,6 +7,7 @@ from app.models.approval import Approval
 from app.models.audit import AuditLog
 from app.models.auth import Invite, UserSession
 from app.models.case import Case, CaseAssignment, CaseEvent, CaseParty
+from app.models.case_analysis import CaseAnalysis
 from app.models.client import Client
 from app.models.document import Document, DocumentVersion
 from app.models.hearing import Hearing
@@ -27,6 +28,7 @@ __all__ = [
     "Invite",
     "UserSession",
     "Case",
+    "CaseAnalysis",
     "CaseAssignment",
     "CaseEvent",
     "CaseParty",
