@@ -5,11 +5,12 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.ai import legal_research
+from app.ai import citation_check, legal_research
 from app.api.deps import get_tenant_db, require
 from app.core.rbac import AuthContext
 from app.schemas.common import Page
 from app.schemas.legal import (
+    AutoVerifyOut,
     JudgmentCreate,
     JudgmentOut,
     LegalReferenceOut,
@@ -99,6 +100,29 @@ def verify_provision(
     db.commit()
     db.refresh(p)
     return ProvisionOut.model_validate(p)
+
+
+@router.post("/provisions/{provision_id}/auto-verify", response_model=AutoVerifyOut)
+def auto_verify_provision(
+    provision_id: uuid.UUID,
+    db: Session = Depends(get_tenant_db),
+    ctx: AuthContext = Depends(require("ai:research:run")),
+) -> AutoVerifyOut:
+    """Cross-check the cited section against official-source content and set the
+    verification status automatically. Only confirms what the sources support —
+    it never marks a citation verified on absence of evidence."""
+    p = legal_service.get_provision(db, ctx, provision_id)
+    if p is None:
+        raise HTTPException(status_code=404, detail="Provision not found")
+    verdict = citation_check.verify_provision(db, ctx, p)
+    db.commit()
+    db.refresh(p)
+    return AutoVerifyOut(
+        provision=ProvisionOut.model_validate(p),
+        status=verdict.status,
+        matched_url=verdict.matched_url,
+        note=verdict.note,
+    )
 
 
 # --- judgments ---------------------------------------------------------------

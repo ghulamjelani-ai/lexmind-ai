@@ -63,6 +63,15 @@ class JudgmentOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class AutoVerifyOut(BaseModel):
+    """Result of the automated citation cross-check for a provision."""
+
+    provision: ProvisionOut
+    status: str
+    matched_url: str | None = None
+    note: str
+
+
 class LegalResearchRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
 
