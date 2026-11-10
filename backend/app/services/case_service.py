@@ -204,6 +204,20 @@ def list_cases(
     return rows, total
 
 
+def accessible_cases(db: Session, ctx: AuthContext, *, limit: int = 5000) -> list[Case]:
+    """All cases the caller may read (including dormant ones) — the input to
+    reporting and CSV export. Returns [] if the caller has no read scope."""
+    scope_conditions = _read_conditions(ctx)
+    if scope_conditions is None:
+        return []
+    where = and_(
+        Case.organization_id == ctx.organization_id,
+        Case.deleted_at.is_(None),
+        *scope_conditions,
+    )
+    return list(db.scalars(select(Case).where(where).limit(limit)).all())
+
+
 def active_cases(db: Session, ctx: AuthContext, *, limit: int = 500) -> list[Case]:
     """Accessible, non-dormant cases for the caller — the input to the priority
     queue. Dormant (closed/archived) cases are excluded at the query level."""
