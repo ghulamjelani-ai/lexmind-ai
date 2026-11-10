@@ -204,6 +204,21 @@ def list_cases(
     return rows, total
 
 
+def active_cases(db: Session, ctx: AuthContext, *, limit: int = 500) -> list[Case]:
+    """Accessible, non-dormant cases for the caller — the input to the priority
+    queue. Dormant (closed/archived) cases are excluded at the query level."""
+    scope_conditions = _read_conditions(ctx)
+    if scope_conditions is None:
+        return []
+    where = and_(
+        Case.organization_id == ctx.organization_id,
+        Case.deleted_at.is_(None),
+        Case.status.notin_(["closed", "archived"]),
+        *scope_conditions,
+    )
+    return list(db.scalars(select(Case).where(where).limit(limit)).all())
+
+
 def update_case(db: Session, ctx: AuthContext, case: Case, data: CaseUpdate) -> Case:
     patch = data.model_dump(exclude_unset=True)
     if "legal_issues" in patch:

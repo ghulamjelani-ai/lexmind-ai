@@ -6,6 +6,20 @@ from datetime import datetime
 from pydantic import BaseModel
 
 
+class PriorityFactorOut(BaseModel):
+    factor: str
+    points: int
+    reason: str
+
+
+class PriorityScoreOut(BaseModel):
+    case_id: str
+    title: str
+    score: int
+    level: str
+    factors: list[PriorityFactorOut]
+
+
 class CaseAnalysisOut(BaseModel):
     id: uuid.UUID
     case_id: uuid.UUID

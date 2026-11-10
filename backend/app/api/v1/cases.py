@@ -21,7 +21,11 @@ from app.schemas.case import (
     PartyIn,
     PartyOut,
 )
-from app.schemas.case_analysis import CaseAnalysisOut
+from app.schemas.case_analysis import (
+    CaseAnalysisOut,
+    PriorityFactorOut,
+    PriorityScoreOut,
+)
 from app.schemas.common import Page
 from app.schemas.evidence_analysis import EvidenceAnalysisOut
 from app.services import case_analysis_service, case_service, evidence_analysis_service
@@ -91,6 +95,32 @@ def list_cases(
         limit=limit,
         offset=offset,
     )
+
+
+@router.get("/priority-queue", response_model=list[PriorityScoreOut])
+def priority_queue(
+    db: Session = Depends(get_tenant_db),
+    ctx: AuthContext = Depends(require("cases:read")),
+    limit: int = Query(default=25, ge=1, le=200),
+) -> list[PriorityScoreOut]:
+    """Accessible active cases ranked by an explainable urgency score — each
+    result carries the factors (and points) that produced its rank."""
+    from datetime import date
+
+    from app.ai import prioritization
+
+    cases = case_service.active_cases(db, ctx)
+    ranked = prioritization.rank(cases, today=date.today())[:limit]
+    return [
+        PriorityScoreOut(
+            case_id=s.case_id,
+            title=s.title,
+            score=s.score,
+            level=s.level,
+            factors=[PriorityFactorOut(**vars(f)) for f in s.factors],
+        )
+        for s in ranked
+    ]
 
 
 @router.get("/{case_id}", response_model=CaseOut)
