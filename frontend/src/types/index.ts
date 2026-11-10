@@ -260,6 +260,31 @@ export interface ClientLite {
   phone: string | null;
 }
 
+export interface Client {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  assigned_lawyer_id: string | null;
+  has_cnic: boolean;
+  created_at: string;
+}
+
+export interface LegalDocument {
+  id: string;
+  case_id: string | null;
+  title: string;
+  category: string;
+  mime: string | null;
+  size: number;
+  checksum: string | null;
+  scan_status: string;
+  current_version: number;
+  created_by: string | null;
+  created_at: string;
+}
+
 // --- Finance & trust accounting ----------------------------------------------
 export interface InvoiceItem {
   id: string;

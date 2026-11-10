@@ -10,7 +10,9 @@ import type {
   AutoVerifyResult,
   Case,
   CaseAnalysis,
+  Client,
   ClientLite,
+  LegalDocument,
   CaseEvent,
   CaseSummary,
   Conversation,
@@ -203,8 +205,60 @@ export const api = {
   convertLead: (id: string, input: { category: string; override?: boolean }) =>
     request<Case>(`/intake/leads/${id}/convert`, { method: "POST", body: JSON.stringify(input) }),
 
-  // --- clients (lite list for pickers) ---------------------------------------
-  listClients: () => request<Page<ClientLite>>("/clients?limit=100"),
+  // --- clients ---------------------------------------------------------------
+  listClients: (q?: string) =>
+    request<Page<ClientLite>>(`/clients?limit=100${q ? `&q=${encodeURIComponent(q)}` : ""}`),
+
+  listClientsFull: (q?: string) =>
+    request<Page<Client>>(`/clients?limit=100${q ? `&q=${encodeURIComponent(q)}` : ""}`),
+
+  createClient: (input: {
+    full_name: string;
+    cnic?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+  }) => request<Client>("/clients", { method: "POST", body: JSON.stringify(input) }),
+
+  deleteClient: (id: string) => request<void>(`/clients/${id}`, { method: "DELETE" }),
+
+  // --- documents -------------------------------------------------------------
+  listDocuments: () => request<Page<LegalDocument>>("/documents?limit=100"),
+
+  uploadDocument: async (file: File, title: string, category: string, caseId?: string) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("title", title);
+    form.append("category", category);
+    if (caseId) form.append("case_id", caseId);
+    const res = await fetch(`${V1}/documents`, { method: "POST", credentials: "include", body: form });
+    if (!res.ok) {
+      let detail = res.statusText;
+      try {
+        const b = await res.json();
+        if (typeof b?.detail === "string") detail = b.detail;
+      } catch {
+        /* ignore */
+      }
+      throw new ApiError(res.status, detail);
+    }
+    return (await res.json()) as LegalDocument;
+  },
+
+  documentDownloadUrl: (id: string) => `${V1}/documents/${id}/download`,
+
+  indexDocument: (id: string) => request<{ chunks: number } | unknown>(`/documents/${id}/index`, { method: "POST" }),
+
+  deleteDocument: (id: string) => request<void>(`/documents/${id}`, { method: "DELETE" }),
+
+  // --- account / MFA ---------------------------------------------------------
+  mfaEnroll: () => request<{ secret: string; otpauth_uri: string }>("/auth/mfa/enroll", { method: "POST" }),
+
+  mfaActivate: (code: string) =>
+    request<{ message: string }>("/auth/mfa/activate", { method: "POST", body: JSON.stringify({ code }) }),
+
+  mfaDisable: (code: string) =>
+    request<{ message: string }>("/auth/mfa/disable", { method: "POST", body: JSON.stringify({ code }) }),
 
   // --- finance & trust accounting --------------------------------------------
   financeSummary: () => request<FinanceSummary>("/finance/summary"),
