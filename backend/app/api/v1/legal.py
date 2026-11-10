@@ -5,12 +5,16 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
+from app.ai import legal_research
 from app.api.deps import get_tenant_db, require
 from app.core.rbac import AuthContext
 from app.schemas.common import Page
 from app.schemas.legal import (
     JudgmentCreate,
     JudgmentOut,
+    LegalReferenceOut,
+    LegalResearchRequest,
+    LegalResearchResponse,
     ProvisionCreate,
     ProvisionOut,
     SourceOut,
@@ -28,6 +32,24 @@ def list_sources(
     """Official legal sources the platform prefers (and links to for manual
     verification when automated verification isn't available)."""
     return [SourceOut(**vars(s)) for s in legal_service.list_sources()]
+
+
+@router.post("/research", response_model=LegalResearchResponse)
+def research(
+    body: LegalResearchRequest,
+    db: Session = Depends(get_tenant_db),
+    ctx: AuthContext = Depends(require("ai:research:run")),
+) -> LegalResearchResponse:
+    """Answer a legal question grounded only in official-source search results,
+    with verification-tagged citations (never fabricated)."""
+    result = legal_research.research(db, ctx, body.question)
+    db.commit()
+    return LegalResearchResponse(
+        answer=result.answer,
+        references=[LegalReferenceOut(**vars(r)) for r in result.references],
+        searched_domains=result.searched_domains,
+        note=result.note,
+    )
 
 
 # --- legislation -------------------------------------------------------------

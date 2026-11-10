@@ -63,6 +63,25 @@ class JudgmentOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class LegalResearchRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=2000)
+
+
+class LegalReferenceOut(BaseModel):
+    title: str
+    url: str
+    domain: str
+    snippet: str
+    verification_status: str
+
+
+class LegalResearchResponse(BaseModel):
+    answer: str
+    references: list[LegalReferenceOut]
+    searched_domains: list[str]
+    note: str | None = None
+
+
 class VerifyRequest(BaseModel):
     status: str
     source_url: str | None = Field(default=None, max_length=1000)

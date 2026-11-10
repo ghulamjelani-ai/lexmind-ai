@@ -41,8 +41,9 @@ Single source of truth for status. A box is checked only when the feature is **i
 
 ## Phase 4 — Legal Intelligence (in progress)
 - [x] Foundation: official PK source registry (Pakistan Code, Punjab Laws, SC, LHC, PJA); legislation + judgment reference models with verification_status (verified/pending/unverified/conflicting), source_url, retrieved_at; create/list/verify endpoints; references start "pending" and are never auto-verified (non-fabrication spine). RLS on both tables; tests incl. tenant isolation
-- [ ] Official legal web-source clients + automated verification pipeline (needs a decision: search-API vs per-source clients, and respect robots/ToS — degrade to manual links)
-- [ ] Legal research agent (mandatory citation format, verification-tagged)
+- [x] Official legal web search via Tavily, restricted to official-source domains (ToS-clean — queries a search index, not the gov sites; retry/backoff). Verified live: real Lahore High Court results for a Section 302 PPC query
+- [x] Legal research agent (`POST /legal/research`): answers grounded ONLY in official-source results, references carry real official URLs tagged verification_status="pending" (never auto-verified / fabricated); when no official results, the answer is flagged ungrounded. Hermetic tests via an injected search seam
+- [ ] Automated citation cross-check (confirm the cited section/para actually appears in the retrieved official content → auto-set verified/conflicting) — currently human-verify
 - [ ] Case analysis (18-section report) + evidence analysis + approval gates
 - [ ] Tests: citation verification accuracy, hallucination evals, non-fabrication guarantees
 

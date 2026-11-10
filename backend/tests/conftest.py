@@ -18,6 +18,8 @@ os.environ["SECURE_COOKIES"] = "false"
 # LLM/embedding API, even when a local .env configures openai/voyage with keys.
 os.environ["AI_PROVIDER"] = "mock"
 os.environ["EMBEDDING_PROVIDER"] = "mock"
+os.environ["LEGAL_SEARCH_PROVIDER"] = "none"
+os.environ["TAVILY_API_KEY"] = ""
 # Isolate document storage to a temp dir for tests.
 os.environ.setdefault("STORAGE_LOCAL_DIR", tempfile.mkdtemp(prefix="lexmind-test-storage-"))
 

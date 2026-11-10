@@ -82,3 +82,48 @@ def test_legal_tenant_isolation(client, db):
     cross = client.post(f"/api/v1/legal/provisions/{pid}/verify", json={"status": "verified"})
     assert cross.status_code == 404
     assert client.get("/api/v1/legal/provisions").json()["total"] == 0
+
+
+def test_official_domains_include_official_sources():
+    from app.integrations.legal_search import official_domains
+
+    d = official_domains()
+    assert "pakistancode.gov.pk" in d
+    assert "supremecourt.gov.pk" in d
+
+
+def test_research_without_search_is_ungrounded(client, db):
+    _owner(client, db, "lg-res0")
+    r = client.post("/api/v1/legal/research", json={"question": "What is section 497 CrPC?"})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert len(body["answer"]) > 0
+    assert body["references"] == []  # no official search configured in tests
+    assert body["note"] is not None  # flagged as ungrounded — verify manually
+    assert "pakistancode.gov.pk" in body["searched_domains"]
+
+
+def test_research_grounded_in_official_results(db):
+    # Inject official-source results (no network) and check grounding + citations.
+    from app.ai import legal_research
+    from app.integrations.legal_search import SearchResult
+    from app.services.rbac_service import build_auth_context
+
+    _, owner = make_org(db, "lg-res1")
+    ctx = build_auth_context(db, owner)
+
+    def fake_search(q, *, max_results=5):
+        return [
+            SearchResult(
+                title="PPC Section 302",
+                url="https://pakistancode.gov.pk/pdffiles/x.pdf",
+                content="Section 302: punishment for qatl-i-amd.",
+                domain="pakistancode.gov.pk",
+            )
+        ]
+
+    res = legal_research.research(db, ctx, "Punishment for murder?", search_fn=fake_search)
+    assert len(res.references) == 1
+    assert res.references[0].domain == "pakistancode.gov.pk"
+    assert res.references[0].verification_status == "pending"  # never auto-verified
+    assert res.note is None
