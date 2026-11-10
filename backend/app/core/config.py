@@ -61,6 +61,11 @@ class Settings(BaseSettings):
     # Max retrieved chunks fed to the model as grounding context.
     ai_retrieval_top_k: int = 5
 
+    # Legal web search (Phase 4 source verification). "none" disables it;
+    # "tavily" searches official sources via Tavily. Key read from the env.
+    legal_search_provider: str = "none"
+    tavily_api_key: str = ""
+
     # Password reset / invite token lifetimes
     password_reset_ttl_minutes: int = 60
     invite_ttl_hours: int = 168  # 7 days
