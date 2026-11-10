@@ -7,6 +7,7 @@ from app.api.v1 import (
     cases,
     clients,
     documents,
+    finance,
     hearings,
     intake,
     invites,
@@ -34,6 +35,7 @@ api_router.include_router(tasks.router)
 api_router.include_router(approvals.router)
 api_router.include_router(notifications.router)
 api_router.include_router(documents.router)
+api_router.include_router(finance.router)
 api_router.include_router(ai.router)
 api_router.include_router(legal.router)
 api_router.include_router(reports.router)

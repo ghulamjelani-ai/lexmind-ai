@@ -10,11 +10,15 @@ import type {
   AutoVerifyResult,
   Case,
   CaseAnalysis,
+  ClientLite,
   CaseEvent,
   CaseSummary,
   Conversation,
   EvidenceAnalysis,
+  Expense,
+  FinanceSummary,
   Invite,
+  Invoice,
   Lead,
   LegalDraft,
   Me,
@@ -26,6 +30,8 @@ import type {
   Role,
   TaxAnswer,
   TaxReference,
+  TrustBalance,
+  TrustTxn,
   User,
 } from "@/types";
 
@@ -196,6 +202,43 @@ export const api = {
 
   convertLead: (id: string, input: { category: string; override?: boolean }) =>
     request<Case>(`/intake/leads/${id}/convert`, { method: "POST", body: JSON.stringify(input) }),
+
+  // --- clients (lite list for pickers) ---------------------------------------
+  listClients: () => request<Page<ClientLite>>("/clients?limit=100"),
+
+  // --- finance & trust accounting --------------------------------------------
+  financeSummary: () => request<FinanceSummary>("/finance/summary"),
+
+  listInvoices: (status?: string) =>
+    request<Invoice[]>(`/finance/invoices${status ? `?status=${status}` : ""}`),
+
+  getInvoice: (id: string) => request<Invoice>(`/finance/invoices/${id}`),
+
+  createInvoice: (input: {
+    client_id: string;
+    case_id?: string;
+    due_on?: string;
+    notes?: string;
+    items: { description: string; quantity: number; unit_amount: number }[];
+  }) => request<Invoice>("/finance/invoices", { method: "POST", body: JSON.stringify(input) }),
+
+  sendInvoice: (id: string) => request<Invoice>(`/finance/invoices/${id}/send`, { method: "POST" }),
+
+  recordPayment: (id: string, input: { amount: number; method: string; note?: string }) =>
+    request<Invoice>(`/finance/invoices/${id}/payments`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+
+  listExpenses: () => request<Expense[]>("/finance/expenses"),
+
+  recordExpense: (input: { description: string; amount: number; billable?: boolean }) =>
+    request<Expense>("/finance/expenses", { method: "POST", body: JSON.stringify(input) }),
+
+  trustTxn: (input: { client_id: string; kind: string; amount: number; note?: string }) =>
+    request<TrustTxn>("/finance/trust", { method: "POST", body: JSON.stringify(input) }),
+
+  trustBalance: (clientId: string) => request<TrustBalance>(`/finance/trust/${clientId}`),
 
   aiListConversations: () => request<Conversation[]>("/ai/conversations"),
 

@@ -17,6 +17,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Cases", href: "/dashboard/cases", permission: "cases:read", icon: "folder", group: "Workspace" },
   { label: "Clients", href: "/dashboard/clients", permission: "clients:manage", icon: "users", group: "Workspace" },
   { label: "Documents", href: "/dashboard/documents", permission: "documents:read", icon: "doc", group: "Workspace" },
+  { label: "Finance", href: "/dashboard/finance", permission: "clients:manage", icon: "wallet", group: "Workspace" },
   { label: "AI Assistant", href: "/dashboard/assistant", permission: "ai:research:run", icon: "spark", group: "Intelligence" },
   { label: "Legal Library", href: "/dashboard/legal", permission: "ai:research:run", icon: "scale", group: "Intelligence" },
   { label: "Tax", href: "/dashboard/tax", permission: "ai:research:run", icon: "receipt", group: "Intelligence" },

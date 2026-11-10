@@ -10,6 +10,7 @@ from app.models.case import Case, CaseAssignment, CaseEvent, CaseParty
 from app.models.case_analysis import CaseAnalysis
 from app.models.client import Client
 from app.models.document import Document, DocumentVersion
+from app.models.finance import Expense, Invoice, InvoiceItem, Payment, TrustTransaction
 from app.models.hearing import Hearing
 from app.models.knowledge import KbChunk, KbDocument
 from app.models.lead import Lead
@@ -37,7 +38,12 @@ __all__ = [
     "Client",
     "Document",
     "DocumentVersion",
+    "Expense",
     "Hearing",
+    "Invoice",
+    "InvoiceItem",
+    "Payment",
+    "TrustTransaction",
     "Judgment",
     "KbChunk",
     "KbDocument",

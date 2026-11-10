@@ -252,3 +252,87 @@ export interface Lead {
   converted_case_id: string | null;
   created_at: string;
 }
+
+export interface ClientLite {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+}
+
+// --- Finance & trust accounting ----------------------------------------------
+export interface InvoiceItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unit_amount: number; // paisa
+  amount: number;
+}
+
+export interface Payment {
+  id: string;
+  amount: number;
+  method: string;
+  paid_on: string;
+  note: string | null;
+  created_at: string;
+}
+
+export interface Invoice {
+  id: string;
+  number: string;
+  client_id: string;
+  case_id: string | null;
+  status: string; // draft | sent | partial | paid | void
+  currency: string;
+  issued_on: string;
+  due_on: string | null;
+  notes: string | null;
+  created_at: string;
+  total: number;
+  paid: number;
+  balance: number;
+  items?: InvoiceItem[];
+  payments?: Payment[];
+}
+
+export interface Expense {
+  id: string;
+  description: string;
+  amount: number;
+  case_id: string | null;
+  client_id: string | null;
+  incurred_on: string;
+  billable: boolean;
+  note: string | null;
+  created_at: string;
+}
+
+export interface TrustTxn {
+  id: string;
+  client_id: string;
+  case_id: string | null;
+  kind: string; // deposit | withdrawal
+  amount: number;
+  balance_after: number;
+  note: string | null;
+  created_at: string;
+}
+
+export interface TrustBalance {
+  client_id: string;
+  balance: number;
+  transactions: TrustTxn[];
+}
+
+export interface FinanceSummary {
+  currency: string;
+  total_invoiced: number;
+  total_paid: number;
+  outstanding: number;
+  overdue_invoices: number;
+  trust_balance: number;
+  expenses_total: number;
+  invoice_count: number;
+  as_of: string;
+}

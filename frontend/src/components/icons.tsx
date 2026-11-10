@@ -48,6 +48,10 @@ export function Icon({ name, className = "h-[18px] w-[18px]" }: { name: string; 
       return <svg {...common}><circle cx="9" cy="8" r="3" /><path d="M4 20c0-3 2.5-5 5-5 1.2 0 2.3.3 3.2.9" /><path d="M16 15h5M18.5 12.5v5" /></svg>;
     case "shield-alert":
       return <svg {...common}><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z" /><path d="M12 8v3M12 14v.01" /></svg>;
+    case "wallet":
+      return <svg {...common}><path d="M3 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2H5a2 2 0 0 1-2-2z" /><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6H16a2 2 0 0 0 0 4h5" /></svg>;
+    case "vault":
+      return <svg {...common}><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="12" cy="12" r="3.5" /><path d="M12 8.5V12M4 20l1-1M20 20l-1-1" /></svg>;
     default:
       return <svg {...common}><circle cx="12" cy="12" r="9" /></svg>;
   }
