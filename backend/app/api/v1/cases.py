@@ -28,7 +28,13 @@ from app.schemas.case_analysis import (
 )
 from app.schemas.common import Page
 from app.schemas.evidence_analysis import EvidenceAnalysisOut
-from app.services import case_analysis_service, case_service, evidence_analysis_service
+from app.schemas.legal_draft import DraftCreate, LegalDraftOut
+from app.services import (
+    case_analysis_service,
+    case_service,
+    evidence_analysis_service,
+    legal_drafting_service,
+)
 
 router = APIRouter(prefix="/cases", tags=["cases"])
 
@@ -296,3 +302,47 @@ def approve_analysis(
     db.commit()
     db.refresh(analysis)
     return CaseAnalysisOut.model_validate(analysis)
+
+
+# --- AI legal drafting (draft until a lawyer approves) -----------------------
+@router.post("/{case_id}/drafts", response_model=LegalDraftOut, status_code=201)
+def generate_draft(
+    case_id: uuid.UUID,
+    body: DraftCreate,
+    db: Session = Depends(get_tenant_db),
+    ctx: AuthContext = Depends(require("ai:draft:generate")),
+) -> LegalDraftOut:
+    case = _load_case(db, ctx, case_id, "cases:read")
+    draft_row = legal_drafting_service.generate(
+        db, ctx, case, draft_type=body.draft_type, title=body.title, instructions=body.instructions
+    )
+    db.commit()
+    db.refresh(draft_row)
+    return LegalDraftOut.model_validate(draft_row)
+
+
+@router.get("/{case_id}/drafts", response_model=list[LegalDraftOut])
+def list_drafts(
+    case_id: uuid.UUID,
+    db: Session = Depends(get_tenant_db),
+    ctx: AuthContext = Depends(require("cases:read")),
+) -> list[LegalDraftOut]:
+    case = _load_case(db, ctx, case_id, "cases:read")
+    return [LegalDraftOut.model_validate(d) for d in legal_drafting_service.list_for_case(db, case)]
+
+
+@router.post("/{case_id}/drafts/{draft_id}/approve", response_model=LegalDraftOut)
+def approve_draft(
+    case_id: uuid.UUID,
+    draft_id: uuid.UUID,
+    db: Session = Depends(get_tenant_db),
+    ctx: AuthContext = Depends(require("approvals:grant")),
+) -> LegalDraftOut:
+    _load_case(db, ctx, case_id, "cases:read")
+    draft_row = legal_drafting_service.get(db, ctx, draft_id)
+    if draft_row is None or draft_row.case_id != case_id:
+        raise HTTPException(status_code=404, detail="Draft not found")
+    draft_row = legal_drafting_service.approve(db, ctx, draft_row)
+    db.commit()
+    db.refresh(draft_row)
+    return LegalDraftOut.model_validate(draft_row)

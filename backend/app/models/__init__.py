@@ -13,6 +13,7 @@ from app.models.document import Document, DocumentVersion
 from app.models.hearing import Hearing
 from app.models.knowledge import KbChunk, KbDocument
 from app.models.legal import Judgment, LegalProvision
+from app.models.legal_draft import LegalDraft
 from app.models.notification import Notification
 from app.models.organization import Organization
 from app.models.password_reset import PasswordResetToken
@@ -39,6 +40,7 @@ __all__ = [
     "Judgment",
     "KbChunk",
     "KbDocument",
+    "LegalDraft",
     "LegalProvision",
     "Notification",
     "Organization",
