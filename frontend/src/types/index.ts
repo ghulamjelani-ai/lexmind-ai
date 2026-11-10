@@ -87,3 +87,89 @@ export interface AiChatMessage {
   citations_json: Citation[];
   created_at: string;
 }
+
+// --- Phase 4/5 AI intelligence ------------------------------------------------
+export interface CaseAnalysis {
+  id: string;
+  case_id: string;
+  report_json: Record<string, { title: string; content: string }>;
+  status: string;
+  model_used: string | null;
+  generated_by: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  created_at: string;
+}
+
+export interface EvidenceAnalysis {
+  supporting: string[];
+  contradicting: string[];
+  missing: string[];
+  notes: string;
+  chunks_used: number;
+}
+
+export interface PriorityFactor {
+  factor: string;
+  points: number;
+  reason: string;
+}
+
+export interface PriorityScore {
+  case_id: string;
+  title: string;
+  score: number;
+  level: string;
+  factors: PriorityFactor[];
+}
+
+export interface LegalDraft {
+  id: string;
+  case_id: string;
+  draft_type: string;
+  title: string;
+  instructions: string | null;
+  content: string;
+  status: string;
+  model_used: string | null;
+  generated_by: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  created_at: string;
+}
+
+export interface CaseSummary {
+  total_cases: number;
+  active_cases: number;
+  by_status: Record<string, number>;
+  by_priority: Record<string, number>;
+  by_category: Record<string, number>;
+  hearings_next_7_days: number;
+  overdue_hearings: number;
+  generated_on: string;
+}
+
+export interface Provision {
+  id: string;
+  law_name: string;
+  section: string | null;
+  text: string | null;
+  source_key: string | null;
+  source_url: string | null;
+  verification_status: string;
+  amended_flag: boolean;
+  retrieved_at: string | null;
+  created_at: string;
+}
+
+export interface AutoVerifyResult {
+  provision: Provision;
+  status: string;
+  matched_url: string | null;
+  note: string;
+}
+
+export interface ReminderDispatch {
+  reminders_created: number;
+  within_hours: number;
+}

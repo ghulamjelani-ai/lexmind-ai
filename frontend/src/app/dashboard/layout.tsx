@@ -17,7 +17,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex flex-1 items-center justify-center text-sm text-slate-500">
+      <div className="flex flex-1 items-center justify-center text-sm text-[var(--muted)]">
         Loading…
       </div>
     );
@@ -26,11 +26,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   if (!me) return null; // redirecting
 
   return (
-    <div className="flex flex-1">
+    <div className="flex flex-1 bg-[var(--bg)]">
       <Sidebar />
       <div className="flex flex-1 flex-col">
         <Topbar />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto px-6 py-7 lg:px-8">
+          <div className="mx-auto max-w-6xl">{children}</div>
+        </main>
       </div>
     </div>
   );

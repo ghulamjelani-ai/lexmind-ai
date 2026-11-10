@@ -15,7 +15,7 @@ export default function Home() {
   }, [loading, me, router]);
 
   return (
-    <main className="flex flex-1 items-center justify-center p-8 text-sm text-slate-500">
+    <main className="flex flex-1 items-center justify-center p-8 text-sm text-[var(--muted)]">
       Loading LexMind…
     </main>
   );

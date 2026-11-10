@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { Icon } from "@/components/icons";
+import { Logo } from "@/components/logo";
 import { useAuth } from "@/lib/auth-context";
 import { NAV_ITEMS } from "@/lib/nav";
 
@@ -11,35 +13,57 @@ export function Sidebar() {
   const { can } = useAuth();
 
   const items = NAV_ITEMS.filter((i) => i.permission === null || can(i.permission));
+  const groups = Array.from(new Set(items.map((i) => i.group)));
 
   return (
-    <aside className="hidden w-60 shrink-0 border-r border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950 sm:block">
-      <div className="mb-6 px-2">
-        <span className="text-sm font-semibold uppercase tracking-widest text-slate-500">
-          LexMind
-        </span>
+    <aside className="hidden w-64 shrink-0 flex-col border-r border-[var(--border)] bg-[var(--surface)] sm:flex">
+      <div className="flex h-16 items-center px-5">
+        <Logo size={30} />
       </div>
-      <nav className="space-y-1">
-        {items.map((item) => {
-          const active =
-            item.href === "/dashboard"
-              ? pathname === "/dashboard"
-              : pathname.startsWith(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`block rounded-md px-3 py-2 text-sm transition ${
-                active
-                  ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
-                  : "text-slate-700 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-800"
-              }`}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
+
+      <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-6">
+        {groups.map((group) => (
+          <div key={group}>
+            <p className="eyebrow px-3 pb-2">{group}</p>
+            <div className="space-y-0.5">
+              {items
+                .filter((i) => i.group === group)
+                .map((item) => {
+                  const active =
+                    item.href === "/dashboard"
+                      ? pathname === "/dashboard"
+                      : pathname.startsWith(item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`group relative flex items-center gap-3 rounded-[10px] px-3 py-2 text-sm font-medium transition ${
+                        active
+                          ? "bg-[var(--brand-ink)] text-white"
+                          : "text-[var(--muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]"
+                      }`}
+                    >
+                      {active && (
+                        <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--brand-gold)]" />
+                      )}
+                      <Icon
+                        name={item.icon}
+                        className={`h-[18px] w-[18px] ${active ? "text-[var(--brand-gold)]" : ""}`}
+                      />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+            </div>
+          </div>
+        ))}
       </nav>
+
+      <div className="border-t border-[var(--border)] px-5 py-3">
+        <p className="text-[11px] text-[var(--muted)]">
+          LexMind AI · <span className="text-[var(--brand-gold-ink)]">Verify before use</span>
+        </p>
+      </div>
     </aside>
   );
 }

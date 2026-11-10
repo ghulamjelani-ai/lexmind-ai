@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { Logo } from "@/components/logo";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -44,39 +45,54 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex flex-1 items-center justify-center p-4">
-      <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <div className="mb-6 text-center">
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
-            LexMind AI
+    <main className="flex flex-1 items-stretch">
+      {/* Brand panel */}
+      <div className="hidden w-1/2 flex-col justify-between bg-[var(--brand-ink)] p-12 lg:flex">
+        <Logo size={34} className="[&_span]:text-white" />
+        <div>
+          <h2 className="max-w-md font-serif text-3xl font-semibold leading-tight text-white">
+            Legal intelligence your chamber can trust.
+          </h2>
+          <p className="mt-4 max-w-md text-sm leading-relaxed text-white/70">
+            Case management, AI analysis, drafting and official-source verification — built for law
+            chambers in Pakistan. Every AI output is a draft, grounded and flagged for a lawyer to
+            verify.
           </p>
-          <h1 className="mt-1 text-xl font-semibold text-slate-900 dark:text-slate-100">
-            Sign in to your chamber
-          </h1>
         </div>
+        <div className="flex gap-6 text-xs text-white/50">
+          <span>Row-level tenant isolation</span>
+          <span>Verify-before-use</span>
+          <span>Non-fabrication by design</span>
+        </div>
+      </div>
 
-        <form onSubmit={onSubmit} className="space-y-4">
-          <Field label="Chamber ID" value={orgSlug} onChange={setOrgSlug} placeholder="demo-chamber" autoComplete="organization" />
-          <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@chamber.pk" autoComplete="username" />
-          <Field label="Password" type="password" value={password} onChange={setPassword} autoComplete="current-password" />
-          {mfaRequired && (
-            <Field label="Authenticator code" value={mfaCode} onChange={setMfaCode} placeholder="123456" inputMode="numeric" />
-          )}
+      {/* Form */}
+      <div className="flex flex-1 items-center justify-center p-6">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 lg:hidden">
+            <Logo size={30} />
+          </div>
+          <p className="eyebrow">Sign in</p>
+          <h1 className="mt-1 font-serif text-2xl font-semibold text-[var(--text)]">
+            Welcome back
+          </h1>
+          <p className="mt-1 text-sm text-[var(--muted)]">Sign in to your chamber workspace.</p>
 
-          {error && (
-            <p className="rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-300">
-              {error}
-            </p>
-          )}
+          <form onSubmit={onSubmit} className="mt-6 space-y-4">
+            <Field label="Chamber ID" value={orgSlug} onChange={setOrgSlug} placeholder="demo-chamber" autoComplete="organization" />
+            <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@chamber.pk" autoComplete="username" />
+            <Field label="Password" type="password" value={password} onChange={setPassword} autoComplete="current-password" />
+            {mfaRequired && (
+              <Field label="Authenticator code" value={mfaCode} onChange={setMfaCode} placeholder="123456" inputMode="numeric" />
+            )}
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-          >
-            {submitting ? "Signing in…" : "Sign in"}
-          </button>
-        </form>
+            {error && <p className="badge badge-bad w-full justify-start px-3 py-2 font-normal">{error}</p>}
+
+            <button type="submit" disabled={submitting} className="btn btn-primary w-full py-2.5">
+              {submitting ? "Signing in…" : "Sign in"}
+            </button>
+          </form>
+        </div>
       </div>
     </main>
   );
@@ -101,9 +117,7 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">
-        {label}
-      </span>
+      <span className="mb-1 block text-sm font-medium text-[var(--text)]">{label}</span>
       <input
         type={type}
         value={value}
@@ -112,7 +126,7 @@ function Field({
         autoComplete={autoComplete}
         inputMode={inputMode}
         required
-        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+        className="input"
       />
     </label>
   );

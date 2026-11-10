@@ -1,26 +1,173 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ------------------------------------------------------------------ *
+ * LexMind design system
+ * Deep navy for authority, a restrained gold for identity, and colour
+ * reserved for meaning (verified / pending / conflicting).
+ * ------------------------------------------------------------------ */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root {
+  --brand-ink: #0b1b3a;        /* deep navy — authority */
+  --brand-ink-2: #12294f;      /* lifted navy */
+  --brand-gold: #e7b24c;       /* identity accent */
+  --brand-gold-ink: #a9761a;   /* gold that passes contrast on light */
+
+  --bg: #f6f7fb;               /* tinted off-white app canvas */
+  --surface: #ffffff;          /* cards */
+  --surface-2: #f1f3f9;        /* subtle fills */
+  --border: #e4e7f0;
+  --text: #16203a;
+  --muted: #64708c;
+  --ring: #2b3f6b;
+
+  --ok: #0f9d6b;
+  --ok-bg: #e7f7f0;
+  --warn: #b8791a;
+  --warn-bg: #fbf1dd;
+  --bad: #d4455f;
+  --bad-bg: #fce8ec;
+  --info: #3657c4;
+  --info-bg: #e9eefb;
+
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(11, 27, 58, 0.18);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --brand-ink: #0b1b3a;
+    --brand-gold: #f1c16a;
+    --brand-gold-ink: #f1c16a;
+
+    --bg: #070d1c;
+    --surface: #0d1630;
+    --surface-2: #121d3b;
+    --border: #1e2a4a;
+    --text: #e8ecf6;
+    --muted: #93a0bf;
+    --ring: #5b74b8;
+
+    --ok: #37d19a;
+    --ok-bg: #0e2a22;
+    --warn: #e7b24c;
+    --warn-bg: #2d2412;
+    --bad: #f4859b;
+    --bad-bg: #2d1620;
+    --info: #8fa6ec;
+    --info-bg: #141f3f;
+
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px -14px rgba(0, 0, 0, 0.6);
   }
 }
 
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-brand: var(--brand-ink);
+  --color-gold: var(--brand-gold);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), Georgia, "Times New Roman", serif;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ------------------------------------------------------------------ *
+ * Reusable components
+ * ------------------------------------------------------------------ */
+@layer components {
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  .surface-muted {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .eyebrow {
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 10px;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  .btn-primary {
+    background: var(--brand-ink);
+    color: #fff;
+    border: 1px solid var(--brand-ink);
+  }
+  .btn-primary:hover:not(:disabled) { background: var(--brand-ink-2); }
+
+  .btn-gold {
+    background: var(--brand-gold);
+    color: #3a2a06;
+    border: 1px solid transparent;
+  }
+  .btn-gold:hover:not(:disabled) { filter: brightness(0.96); }
+
+  .btn-ghost {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover:not(:disabled) { background: var(--surface-2); }
+
+  .input, .select, .textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.875rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .input:focus, .select:focus, .textarea:focus {
+    border-color: var(--ring);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 20%, transparent);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border-radius: 999px;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+  .badge-ok   { background: var(--ok-bg);   color: var(--ok); }
+  .badge-warn { background: var(--warn-bg); color: var(--warn); }
+  .badge-bad  { background: var(--bad-bg);  color: var(--bad); }
+  .badge-info { background: var(--info-bg); color: var(--info); }
+  .badge-muted{ background: var(--surface-2); color: var(--muted); }
+
+  .dot { height: 0.5rem; width: 0.5rem; border-radius: 999px; }
 }

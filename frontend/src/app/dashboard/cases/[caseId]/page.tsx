@@ -4,17 +4,24 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { Icon } from "@/components/icons";
+import { EmptyState, VerificationBadge } from "@/components/ui";
 import { api, ApiError, CASE_STATUSES } from "@/lib/api";
-import type { Case, CaseEvent } from "@/types";
+import { useAuth } from "@/lib/auth-context";
+import type { Case, CaseAnalysis, CaseEvent, EvidenceAnalysis, LegalDraft } from "@/types";
+
+type Tab = "overview" | "analysis" | "evidence" | "drafts";
 
 export default function CaseDetailPage() {
   const params = useParams<{ caseId: string }>();
   const caseId = params.caseId;
+  const { can } = useAuth();
 
   const [kase, setKase] = useState<Case | null>(null);
   const [events, setEvents] = useState<CaseEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState("");
+  const [tab, setTab] = useState<Tab>("overview");
 
   async function load() {
     try {
@@ -27,7 +34,6 @@ export default function CaseDetailPage() {
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseId]);
@@ -48,83 +54,500 @@ export default function CaseDetailPage() {
   if (error) {
     return (
       <div>
-        <Link href="/dashboard/cases" className="text-sm text-slate-500 hover:underline">← Cases</Link>
-        <p className="mt-4 rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-300">
-          {error}
-        </p>
+        <Link href="/dashboard/cases" className="text-sm text-[var(--muted)] hover:underline">
+          ← Cases
+        </Link>
+        <p className="mt-4 badge badge-bad px-3 py-2">{error}</p>
       </div>
     );
   }
 
-  if (!kase) {
-    return <p className="text-sm text-slate-500">Loading…</p>;
-  }
+  if (!kase) return <p className="text-sm text-[var(--muted)]">Loading…</p>;
+
+  const canAI = can("ai:analysis:request");
+  const canDraft = can("ai:draft:generate");
+
+  const tabs: { id: Tab; label: string; icon: string; show: boolean }[] = [
+    { id: "overview", label: "Overview", icon: "folder", show: true },
+    { id: "analysis", label: "Case analysis", icon: "spark", show: canAI },
+    { id: "evidence", label: "Evidence", icon: "scale", show: canAI },
+    { id: "drafts", label: "Drafts", icon: "doc", show: canDraft },
+  ];
 
   return (
-    <div className="max-w-3xl">
-      <Link href="/dashboard/cases" className="text-sm text-slate-500 hover:underline">← Cases</Link>
-      <h1 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{kase.title}</h1>
-      <p className="mt-1 text-slate-500">
-        {kase.category}
-        {kase.opposite_party ? ` · vs ${kase.opposite_party}` : ""}
-      </p>
+    <div>
+      <Link href="/dashboard/cases" className="text-sm text-[var(--muted)] hover:underline">
+        ← Cases
+      </Link>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="mt-2 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-2xl font-semibold tracking-tight text-[var(--text)]">
+            {kase.title}
+          </h1>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            <span className="capitalize">{kase.category}</span>
+            {kase.opposite_party ? ` · vs ${kase.opposite_party}` : ""}
+          </p>
+        </div>
+        <span className={`badge ${kase.priority === "critical" ? "badge-bad" : kase.priority === "high" ? "badge-warn" : "badge-muted"}`}>
+          {kase.priority} priority
+        </span>
+      </div>
+
+      {/* Facts */}
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Field label="Status">
-          <select
-            value={kase.status}
-            onChange={(e) => changeStatus(e.target.value)}
-            className="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-          >
+          <select value={kase.status} onChange={(e) => changeStatus(e.target.value)} className="select">
             {CASE_STATUSES.map((s) => (
-              <option key={s} value={s}>{s}</option>
+              <option key={s} value={s}>
+                {s.replace(/_/g, " ")}
+              </option>
             ))}
           </select>
         </Field>
-        <Field label="Priority">{kase.priority}</Field>
+        <Field label="Priority">
+          <span className="capitalize">{kase.priority}</span>
+        </Field>
         <Field label="Court">{kase.court_name ?? "—"}</Field>
         <Field label="Next hearing">{kase.next_hearing_date ?? "—"}</Field>
       </div>
 
-      <form onSubmit={submitNote} className="mt-8">
-        <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Add a note</h2>
-        <div className="mt-2 flex gap-2">
-          <input
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder="Add an update to the case timeline…"
-            className="flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-          />
-          <button className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900">
-            Add
-          </button>
-        </div>
-      </form>
+      {/* Tabs */}
+      <div className="mt-7 flex gap-1 border-b border-[var(--border)]">
+        {tabs
+          .filter((t) => t.show)
+          .map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`-mb-px flex items-center gap-2 border-b-2 px-3.5 py-2.5 text-sm font-medium transition ${
+                tab === t.id
+                  ? "border-[var(--brand-gold)] text-[var(--text)]"
+                  : "border-transparent text-[var(--muted)] hover:text-[var(--text)]"
+              }`}
+            >
+              <Icon name={t.icon} className="h-4 w-4" />
+              {t.label}
+            </button>
+          ))}
+      </div>
 
-      <h2 className="mt-8 text-sm font-semibold text-slate-700 dark:text-slate-300">Timeline</h2>
-      <ol className="mt-3 space-y-3 border-l border-slate-200 pl-4 dark:border-slate-800">
-        {events.map((e) => (
-          <li key={e.id} className="relative">
-            <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-slate-400" />
-            <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
-              {e.event_type.replace(/_/g, " ")}
-            </p>
-            <p className="text-xs text-slate-400">{new Date(e.occurred_at).toLocaleString()}</p>
-            {e.event_type === "note_added" && typeof e.payload_json.note === "string" && (
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{e.payload_json.note as string}</p>
-            )}
-          </li>
-        ))}
-      </ol>
+      <div className="mt-6">
+        {tab === "overview" && (
+          <Overview events={events} note={note} setNote={setNote} submitNote={submitNote} />
+        )}
+        {tab === "analysis" && <AnalysisTab caseId={caseId} canApprove={can("approvals:grant")} onChange={load} />}
+        {tab === "evidence" && <EvidenceTab caseId={caseId} />}
+        {tab === "drafts" && <DraftsTab caseId={caseId} canApprove={can("approvals:grant")} onChange={load} />}
+      </div>
     </div>
   );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-slate-200 p-3 dark:border-slate-800">
-      <p className="text-xs uppercase tracking-wide text-slate-400">{label}</p>
-      <div className="mt-1 text-sm text-slate-800 dark:text-slate-200">{children}</div>
+    <div className="card p-3">
+      <p className="eyebrow">{label}</p>
+      <div className="mt-1.5 text-sm text-[var(--text)]">{children}</div>
+    </div>
+  );
+}
+
+/* --------------------------------- Overview ------------------------------- */
+function Overview({
+  events,
+  note,
+  setNote,
+  submitNote,
+}: {
+  events: CaseEvent[];
+  note: string;
+  setNote: (v: string) => void;
+  submitNote: (e: React.FormEvent) => void;
+}) {
+  return (
+    <div className="max-w-2xl">
+      <form onSubmit={submitNote}>
+        <p className="eyebrow mb-2">Add a note</p>
+        <div className="flex gap-2">
+          <input
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Add an update to the case timeline…"
+            className="input"
+          />
+          <button className="btn btn-primary">Add</button>
+        </div>
+      </form>
+
+      <p className="eyebrow mt-8 mb-3">Timeline</p>
+      {events.length === 0 ? (
+        <EmptyState title="No activity yet" />
+      ) : (
+        <ol className="space-y-3 border-l border-[var(--border)] pl-5">
+          {events.map((e) => (
+            <li key={e.id} className="relative">
+              <span className="absolute -left-[23px] top-1.5 h-2.5 w-2.5 rounded-full bg-[var(--brand-gold)]" />
+              <p className="text-sm font-medium capitalize text-[var(--text)]">
+                {e.event_type.replace(/_/g, " ")}
+              </p>
+              <p className="text-xs text-[var(--muted)]">{new Date(e.occurred_at).toLocaleString()}</p>
+              {e.event_type === "note_added" && typeof e.payload_json.note === "string" && (
+                <p className="mt-1 text-sm text-[var(--muted)]">{e.payload_json.note as string}</p>
+              )}
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  );
+}
+
+/* --------------------------------- Analysis ------------------------------- */
+function AnalysisTab({
+  caseId,
+  canApprove,
+  onChange,
+}: {
+  caseId: string;
+  canApprove: boolean;
+  onChange: () => void;
+}) {
+  const [items, setItems] = useState<CaseAnalysis[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState<string | null>(null);
+
+  async function load() {
+    setItems(await api.listAnalyses(caseId));
+  }
+  useEffect(() => {
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [caseId]);
+
+  async function generate() {
+    setBusy(true);
+    try {
+      const a = await api.generateAnalysis(caseId);
+      setOpen(a.id);
+      await load();
+      onChange();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function approve(a: CaseAnalysis) {
+    await api.approveAnalysis(caseId, a.id);
+    await load();
+    onChange();
+  }
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <p className="max-w-xl text-sm text-[var(--muted)]">
+          A structured 18-section analysis grounded in the case&apos;s indexed documents. Every
+          report is a <strong className="text-[var(--text)]">draft</strong> until a qualified lawyer
+          approves it — it never declares guilt or a final offence.
+        </p>
+        <button onClick={generate} disabled={busy} className="btn btn-primary shrink-0">
+          <Icon name="spark" className="h-4 w-4" />
+          {busy ? "Analysing…" : "Generate analysis"}
+        </button>
+      </div>
+
+      {items === null ? (
+        <p className="text-sm text-[var(--muted)]">Loading…</p>
+      ) : items.length === 0 ? (
+        <EmptyState title="No analysis yet" hint="Generate one to see the structured report." />
+      ) : (
+        <div className="space-y-3">
+          {items.map((a) => {
+            const sections = Object.entries(a.report_json);
+            const isOpen = open === a.id;
+            return (
+              <div key={a.id} className="card p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-medium text-[var(--text)]">
+                      Analysis · {new Date(a.created_at).toLocaleDateString()}
+                    </p>
+                    <p className="text-xs text-[var(--muted)]">
+                      {sections.length} sections · {a.model_used ?? "model"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <VerificationBadge status={a.status} />
+                    {a.status === "draft" && canApprove && (
+                      <button onClick={() => approve(a)} className="btn btn-gold">
+                        <Icon name="check" className="h-4 w-4" />
+                        Approve
+                      </button>
+                    )}
+                    <button onClick={() => setOpen(isOpen ? null : a.id)} className="btn btn-ghost">
+                      {isOpen ? "Hide" : "View"}
+                    </button>
+                  </div>
+                </div>
+
+                {isOpen && (
+                  <div className="mt-4 space-y-4 border-t border-[var(--border)] pt-4">
+                    {sections.map(([key, sec]) => (
+                      <div key={key}>
+                        <p className="font-serif text-sm font-semibold text-[var(--brand-ink)] dark:text-[var(--brand-gold)]">
+                          {sec.title}
+                        </p>
+                        <p className="mt-1 whitespace-pre-wrap text-sm text-[var(--muted)]">
+                          {sec.content || "—"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* --------------------------------- Evidence ------------------------------- */
+function EvidenceTab({ caseId }: { caseId: string }) {
+  const [result, setResult] = useState<EvidenceAnalysis | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  async function run() {
+    setBusy(true);
+    try {
+      setResult(await api.evidenceAnalysis(caseId));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <p className="max-w-xl text-sm text-[var(--muted)]">
+          Maps the case&apos;s documents into supporting, contradicting and missing evidence —
+          grounded only in what is indexed, never invented.
+        </p>
+        <button onClick={run} disabled={busy} className="btn btn-primary shrink-0">
+          <Icon name="scale" className="h-4 w-4" />
+          {busy ? "Analysing…" : "Run evidence analysis"}
+        </button>
+      </div>
+
+      {!result ? (
+        <EmptyState title="No evidence map yet" hint="Run the analysis to build one." />
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <EvidenceColumn title="Supporting" items={result.supporting} tone="ok" icon="check" />
+            <EvidenceColumn title="Contradicting" items={result.contradicting} tone="bad" icon="alert" />
+            <EvidenceColumn title="Missing" items={result.missing} tone="warn" icon="clock" />
+          </div>
+          {result.notes && (
+            <p className="mt-4 rounded-[12px] border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm text-[var(--muted)]">
+              {result.notes}
+            </p>
+          )}
+          <p className="mt-2 text-xs text-[var(--muted)]">
+            Based on {result.chunks_used} document chunk(s).
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
+function EvidenceColumn({
+  title,
+  items,
+  tone,
+  icon,
+}: {
+  title: string;
+  items: string[];
+  tone: "ok" | "bad" | "warn";
+  icon: string;
+}) {
+  const badge = { ok: "badge-ok", bad: "badge-bad", warn: "badge-warn" }[tone];
+  return (
+    <div className="card p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <span className={`badge ${badge}`}>
+          <Icon name={icon} className="h-3.5 w-3.5" />
+          {title}
+        </span>
+        <span className="text-xs tabular-nums text-[var(--muted)]">{items.length}</span>
+      </div>
+      {items.length === 0 ? (
+        <p className="text-sm text-[var(--muted)]">None identified.</p>
+      ) : (
+        <ul className="space-y-2">
+          {items.map((it, i) => (
+            <li key={i} className="text-sm text-[var(--text)]">
+              {it}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/* --------------------------------- Drafts --------------------------------- */
+const DRAFT_TYPES = [
+  "bail_application",
+  "legal_notice",
+  "plaint",
+  "written_statement",
+  "application",
+  "affidavit",
+  "written_arguments",
+];
+
+function DraftsTab({
+  caseId,
+  canApprove,
+  onChange,
+}: {
+  caseId: string;
+  canApprove: boolean;
+  onChange: () => void;
+}) {
+  const [items, setItems] = useState<LegalDraft[] | null>(null);
+  const [type, setType] = useState(DRAFT_TYPES[0]);
+  const [title, setTitle] = useState("");
+  const [instructions, setInstructions] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState<string | null>(null);
+
+  async function load() {
+    setItems(await api.listDrafts(caseId));
+  }
+  useEffect(() => {
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [caseId]);
+
+  async function generate(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const d = await api.generateDraft(caseId, {
+        draft_type: type,
+        title: title.trim() || type.replace(/_/g, " "),
+        instructions: instructions.trim() || undefined,
+      });
+      setOpen(d.id);
+      setTitle("");
+      setInstructions("");
+      await load();
+      onChange();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function approve(d: LegalDraft) {
+    await api.approveDraft(caseId, d.id);
+    await load();
+    onChange();
+  }
+
+  return (
+    <div>
+      <form onSubmit={generate} className="card mb-5 p-5">
+        <p className="eyebrow mb-3">Draft a document</p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <label>
+            <span className="mb-1 block text-sm font-medium text-[var(--text)]">Type</span>
+            <select value={type} onChange={(e) => setType(e.target.value)} className="select">
+              {DRAFT_TYPES.map((t) => (
+                <option key={t} value={t}>
+                  {t.replace(/_/g, " ")}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span className="mb-1 block text-sm font-medium text-[var(--text)]">Title</span>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Bail application"
+              className="input"
+            />
+          </label>
+        </div>
+        <label className="mt-3 block">
+          <span className="mb-1 block text-sm font-medium text-[var(--text)]">Instructions (optional)</span>
+          <textarea
+            value={instructions}
+            onChange={(e) => setInstructions(e.target.value)}
+            rows={2}
+            placeholder="Any specifics the draft should address…"
+            className="textarea"
+          />
+        </label>
+        <div className="mt-3 flex items-center justify-between">
+          <p className="text-xs text-[var(--muted)]">
+            Drafts use <code className="rounded bg-[var(--surface-2)] px-1">[PLACEHOLDER]</code> markers
+            for unknowns — never invented facts.
+          </p>
+          <button disabled={busy} className="btn btn-primary">
+            <Icon name="doc" className="h-4 w-4" />
+            {busy ? "Drafting…" : "Generate draft"}
+          </button>
+        </div>
+      </form>
+
+      {items === null ? (
+        <p className="text-sm text-[var(--muted)]">Loading…</p>
+      ) : items.length === 0 ? (
+        <EmptyState title="No drafts yet" hint="Generate your first draft above." />
+      ) : (
+        <div className="space-y-3">
+          {items.map((d) => {
+            const isOpen = open === d.id;
+            return (
+              <div key={d.id} className="card p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-medium text-[var(--text)]">{d.title}</p>
+                    <p className="text-xs capitalize text-[var(--muted)]">
+                      {d.draft_type.replace(/_/g, " ")} · {new Date(d.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <VerificationBadge status={d.status} />
+                    {d.status === "draft" && canApprove && (
+                      <button onClick={() => approve(d)} className="btn btn-gold">
+                        <Icon name="check" className="h-4 w-4" />
+                        Approve
+                      </button>
+                    )}
+                    <button onClick={() => setOpen(isOpen ? null : d.id)} className="btn btn-ghost">
+                      {isOpen ? "Hide" : "View"}
+                    </button>
+                  </div>
+                </div>
+                {isOpen && (
+                  <pre className="mt-4 max-h-[28rem] overflow-auto whitespace-pre-wrap border-t border-[var(--border)] pt-4 font-sans text-sm leading-relaxed text-[var(--muted)]">
+                    {d.content}
+                  </pre>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

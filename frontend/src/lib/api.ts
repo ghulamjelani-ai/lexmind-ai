@@ -7,13 +7,21 @@
  */
 import type {
   AiChatMessage,
+  AutoVerifyResult,
   Case,
+  CaseAnalysis,
   CaseEvent,
+  CaseSummary,
   Conversation,
+  EvidenceAnalysis,
   Invite,
+  LegalDraft,
   Me,
   Organization,
   Page,
+  PriorityScore,
+  Provision,
+  ReminderDispatch,
   Role,
   User,
 } from "@/types";
@@ -108,6 +116,56 @@ export const api = {
 
   addCaseNote: (id: string, note: string) =>
     request<CaseEvent>(`/cases/${id}/notes`, { method: "POST", body: JSON.stringify({ note }) }),
+
+  // --- Phase 4/5 intelligence ------------------------------------------------
+  priorityQueue: (limit = 25) =>
+    request<PriorityScore[]>(`/cases/priority-queue?limit=${limit}`),
+
+  listAnalyses: (caseId: string) =>
+    request<CaseAnalysis[]>(`/cases/${caseId}/analysis`),
+
+  generateAnalysis: (caseId: string) =>
+    request<CaseAnalysis>(`/cases/${caseId}/analysis`, { method: "POST" }),
+
+  approveAnalysis: (caseId: string, analysisId: string) =>
+    request<CaseAnalysis>(`/cases/${caseId}/analysis/${analysisId}/approve`, { method: "POST" }),
+
+  evidenceAnalysis: (caseId: string) =>
+    request<EvidenceAnalysis>(`/cases/${caseId}/evidence-analysis`, { method: "POST" }),
+
+  listDrafts: (caseId: string) => request<LegalDraft[]>(`/cases/${caseId}/drafts`),
+
+  generateDraft: (caseId: string, input: { draft_type: string; title: string; instructions?: string }) =>
+    request<LegalDraft>(`/cases/${caseId}/drafts`, { method: "POST", body: JSON.stringify(input) }),
+
+  approveDraft: (caseId: string, draftId: string) =>
+    request<LegalDraft>(`/cases/${caseId}/drafts/${draftId}/approve`, { method: "POST" }),
+
+  // --- reports ---------------------------------------------------------------
+  reportSummary: () => request<CaseSummary>("/reports/summary"),
+
+  casesCsvUrl: () => `${V1}/reports/cases.csv`,
+
+  // --- hearing reminders -----------------------------------------------------
+  dispatchReminders: (withinHours = 48) =>
+    request<ReminderDispatch>(`/hearings/reminders/dispatch?within_hours=${withinHours}`, {
+      method: "POST",
+    }),
+
+  // --- legal library ---------------------------------------------------------
+  listProvisions: (params: { status?: string; q?: string; limit?: number } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.status) qs.set("status", params.status);
+    if (params.q) qs.set("q", params.q);
+    qs.set("limit", String(params.limit ?? 50));
+    return request<Page<Provision>>(`/legal/provisions?${qs.toString()}`);
+  },
+
+  createProvision: (input: { law_name: string; section?: string; source_url?: string }) =>
+    request<Provision>("/legal/provisions", { method: "POST", body: JSON.stringify(input) }),
+
+  autoVerifyProvision: (provisionId: string) =>
+    request<AutoVerifyResult>(`/legal/provisions/${provisionId}/auto-verify`, { method: "POST" }),
 
   aiListConversations: () => request<Conversation[]>("/ai/conversations"),
 
