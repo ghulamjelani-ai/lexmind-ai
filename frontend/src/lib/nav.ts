@@ -13,6 +13,7 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", permission: null, icon: "home", group: "Workspace" },
+  { label: "Intake", href: "/dashboard/intake", permission: "cases:read", icon: "intake", group: "Workspace" },
   { label: "Cases", href: "/dashboard/cases", permission: "cases:read", icon: "folder", group: "Workspace" },
   { label: "Clients", href: "/dashboard/clients", permission: "clients:manage", icon: "users", group: "Workspace" },
   { label: "Documents", href: "/dashboard/documents", permission: "documents:read", icon: "doc", group: "Workspace" },

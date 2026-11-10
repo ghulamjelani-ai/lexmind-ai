@@ -228,3 +228,27 @@ export interface TaxAnswer {
   rejection_code: string | null;
   examples: string[];
 }
+
+// --- Client intake & conflict screening --------------------------------------
+export interface ConflictHit {
+  severity: string; // block | review | info
+  kind: string;
+  reason: string;
+  match: string;
+}
+
+export interface Lead {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  opposing_party: string | null;
+  matter_type: string | null;
+  description: string | null;
+  status: string; // new | converted | rejected
+  conflict_level: string; // pending | clear | review | block
+  conflict_hits_json: ConflictHit[];
+  screened_at: string | null;
+  converted_case_id: string | null;
+  created_at: string;
+}

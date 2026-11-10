@@ -15,6 +15,7 @@ import type {
   Conversation,
   EvidenceAnalysis,
   Invite,
+  Lead,
   LegalDraft,
   Me,
   Organization,
@@ -174,6 +175,27 @@ export const api = {
 
   taxAsk: (query: string) =>
     request<TaxAnswer>("/tax/ask", { method: "POST", body: JSON.stringify({ query }) }),
+
+  // --- client intake & conflict screening ------------------------------------
+  listLeads: (status?: string) =>
+    request<Lead[]>(`/intake/leads${status ? `?status=${status}` : ""}`),
+
+  createLead: (input: {
+    full_name: string;
+    email?: string;
+    phone?: string;
+    opposing_party?: string;
+    matter_type?: string;
+    description?: string;
+  }) => request<Lead>("/intake/leads", { method: "POST", body: JSON.stringify(input) }),
+
+  rescreenLead: (id: string) =>
+    request<Lead>(`/intake/leads/${id}/rescreen`, { method: "POST" }),
+
+  rejectLead: (id: string) => request<Lead>(`/intake/leads/${id}/reject`, { method: "POST" }),
+
+  convertLead: (id: string, input: { category: string; override?: boolean }) =>
+    request<Case>(`/intake/leads/${id}/convert`, { method: "POST", body: JSON.stringify(input) }),
 
   aiListConversations: () => request<Conversation[]>("/ai/conversations"),
 

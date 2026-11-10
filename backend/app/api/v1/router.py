@@ -8,6 +8,7 @@ from app.api.v1 import (
     clients,
     documents,
     hearings,
+    intake,
     invites,
     legal,
     notifications,
@@ -26,6 +27,7 @@ api_router.include_router(users.router)
 api_router.include_router(roles.router)
 api_router.include_router(invites.router)
 api_router.include_router(clients.router)
+api_router.include_router(intake.router)
 api_router.include_router(cases.router)
 api_router.include_router(hearings.router)
 api_router.include_router(tasks.router)
