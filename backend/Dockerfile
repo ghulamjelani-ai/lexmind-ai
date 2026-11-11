@@ -22,6 +22,9 @@ RUN uv sync --no-dev
 EXPOSE 8000
 
 # Default command runs migrations, then the API; the worker service overrides
-# this in compose. Shell form so `&&` and $PORT (injected by Railway/Render/Fly)
-# are honored by /bin/sh; 8000 locally. alembic upgrade head is idempotent.
-CMD uv run alembic upgrade head && uv run uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# this in compose. Shell form so the loop, `&&` and $PORT (injected by
+# Railway/Render/Fly) are honored by /bin/sh; 8000 locally. The retry loop
+# tolerates the few-second delay before private networking is ready on the
+# host; alembic upgrade head is idempotent. If the DB is still unreachable
+# after the retries, the API starts anyway (it stays up; health needs no DB).
+CMD for i in 1 2 3 4 5 6 7 8; do uv run alembic upgrade head && break; echo "DB not ready (attempt $i), retrying in 3s..."; sleep 3; done; uv run uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
