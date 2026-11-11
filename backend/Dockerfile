@@ -21,6 +21,7 @@ RUN uv sync --no-dev
 
 EXPOSE 8000
 
-# Default command runs the API; the worker service overrides this in compose.
-# Shell form so $PORT (injected by Railway/Render/Fly) is honored; 8000 locally.
-CMD uv run uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Default command runs migrations, then the API; the worker service overrides
+# this in compose. Shell form so `&&` and $PORT (injected by Railway/Render/Fly)
+# are honored by /bin/sh; 8000 locally. alembic upgrade head is idempotent.
+CMD uv run alembic upgrade head && uv run uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
