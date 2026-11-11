@@ -74,6 +74,18 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  registerOrg: (input: {
+    org_name: string;
+    org_slug: string;
+    owner_name: string;
+    owner_email: string;
+    owner_password: string;
+  }) =>
+    request<{ id: string; name: string; slug: string }>("/orgs/register", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+
   login: (org_slug: string, email: string, password: string, mfa_code?: string) =>
     request<Me>("/auth/login", {
       method: "POST",
