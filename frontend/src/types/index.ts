@@ -55,6 +55,16 @@ export interface Case {
   created_at: string;
 }
 
+export interface Hearing {
+  id: string;
+  case_id: string;
+  court_name: string | null;
+  scheduled_at: string;
+  status: string;
+  confirmation_source: string | null;
+  notes: string | null;
+}
+
 export interface CaseEvent {
   id: string;
   case_id: string;

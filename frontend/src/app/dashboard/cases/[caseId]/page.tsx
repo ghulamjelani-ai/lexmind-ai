@@ -8,9 +8,9 @@ import { Icon } from "@/components/icons";
 import { EmptyState, VerificationBadge } from "@/components/ui";
 import { api, ApiError, CASE_STATUSES } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
-import type { Case, CaseAnalysis, CaseEvent, EvidenceAnalysis, LegalDraft } from "@/types";
+import type { Case, CaseAnalysis, CaseEvent, EvidenceAnalysis, Hearing, LegalDraft } from "@/types";
 
-type Tab = "overview" | "analysis" | "evidence" | "drafts";
+type Tab = "overview" | "hearings" | "analysis" | "evidence" | "drafts";
 
 export default function CaseDetailPage() {
   const params = useParams<{ caseId: string }>();
@@ -69,6 +69,7 @@ export default function CaseDetailPage() {
 
   const tabs: { id: Tab; label: string; icon: string; show: boolean }[] = [
     { id: "overview", label: "Overview", icon: "folder", show: true },
+    { id: "hearings", label: "Hearings", icon: "clock", show: true },
     { id: "analysis", label: "Case analysis", icon: "spark", show: canAI },
     { id: "evidence", label: "Evidence", icon: "scale", show: canAI },
     { id: "drafts", label: "Drafts", icon: "doc", show: canDraft },
@@ -137,6 +138,9 @@ export default function CaseDetailPage() {
         {tab === "overview" && (
           <Overview events={events} note={note} setNote={setNote} submitNote={submitNote} />
         )}
+        {tab === "hearings" && (
+          <HearingsTab caseId={caseId} canManage={can("hearings:manage")} onChange={load} />
+        )}
         {tab === "analysis" && <AnalysisTab caseId={caseId} canApprove={can("approvals:grant")} onChange={load} />}
         {tab === "evidence" && <EvidenceTab caseId={caseId} />}
         {tab === "drafts" && <DraftsTab caseId={caseId} canApprove={can("approvals:grant")} onChange={load} />}
@@ -199,6 +203,163 @@ function Overview({
             </li>
           ))}
         </ol>
+      )}
+    </div>
+  );
+}
+
+/* --------------------------------- Hearings ------------------------------- */
+function HearingsTab({
+  caseId,
+  canManage,
+  onChange,
+}: {
+  caseId: string;
+  canManage: boolean;
+  onChange: () => void;
+}) {
+  const [hearings, setHearings] = useState<Hearing[] | null>(null);
+  const [when, setWhen] = useState("");
+  const [court, setCourt] = useState("");
+  const [notes, setNotes] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function load() {
+    try {
+      setHearings(await api.listCaseHearings(caseId));
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Failed to load hearings");
+    }
+  }
+
+  useEffect(() => {
+    void load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [caseId]);
+
+  async function add(e: React.FormEvent) {
+    e.preventDefault();
+    if (!when) {
+      setError("Pick a date and time for the hearing.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await api.createHearing(caseId, {
+        scheduled_at: when,
+        court_name: court.trim() || undefined,
+        notes: notes.trim() || undefined,
+      });
+      setWhen("");
+      setCourt("");
+      setNotes("");
+      await load();
+      onChange();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Failed to add hearing");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirm(h: Hearing) {
+    const source = window.prompt("How was this hearing confirmed? (e.g. cause list, court diary)");
+    if (!source || !source.trim()) return;
+    try {
+      await api.confirmHearing(h.id, source.trim());
+      await load();
+      onChange();
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Failed to confirm hearing");
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {error && <p className="badge badge-bad w-full justify-start px-3 py-2 font-normal">{error}</p>}
+
+      {canManage && (
+        <div className="card p-4">
+          <p className="eyebrow mb-3">Schedule a hearing</p>
+          <form onSubmit={add} className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+            <label className="block sm:col-span-2">
+              <span className="mb-1 block text-sm font-medium text-[var(--text)]">Date &amp; time</span>
+              <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} className="input" />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-sm font-medium text-[var(--text)]">Court</span>
+              <input value={court} onChange={(e) => setCourt(e.target.value)} placeholder="e.g. LHC" className="input" />
+            </label>
+            <div className="flex items-end">
+              <button disabled={busy} className="btn btn-primary w-full">{busy ? "Adding…" : "Add hearing"}</button>
+            </div>
+            <label className="block sm:col-span-4">
+              <span className="mb-1 block text-sm font-medium text-[var(--text)]">Notes (optional)</span>
+              <input value={notes} onChange={(e) => setNotes(e.target.value)} className="input" />
+            </label>
+          </form>
+          <p className="mt-2 text-xs text-[var(--muted)]">
+            A hearing stays <span className="text-[var(--warn)]">unconfirmed</span> until you confirm
+            it against the cause list or court diary.
+          </p>
+        </div>
+      )}
+
+      {hearings === null ? (
+        <p className="text-sm text-[var(--muted)]">Loading hearings…</p>
+      ) : hearings.length === 0 ? (
+        <EmptyState
+          title="No hearings yet"
+          hint={canManage ? "Schedule one above." : "No hearings scheduled for this case."}
+        />
+      ) : (
+        <div className="card overflow-hidden p-0">
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-[var(--border)] bg-[var(--surface-2)] text-xs uppercase tracking-wide text-[var(--muted)]">
+                <th className="px-4 py-2.5 font-semibold">When</th>
+                <th className="px-4 py-2.5 font-semibold">Court</th>
+                <th className="px-4 py-2.5 font-semibold">Status</th>
+                <th className="px-4 py-2.5" />
+              </tr>
+            </thead>
+            <tbody>
+              {hearings.map((h) => (
+                <tr key={h.id} className="border-b border-[var(--border)] last:border-0">
+                  <td className="px-4 py-3 text-[var(--text)]">
+                    {new Date(h.scheduled_at).toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3 text-[var(--muted)]">{h.court_name ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`badge capitalize ${
+                        h.status === "confirmed"
+                          ? "badge-ok"
+                          : h.status === "cancelled"
+                            ? "badge-bad"
+                            : "badge-warn"
+                      }`}
+                    >
+                      {h.status.replace(/_/g, " ")}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {canManage && h.status !== "confirmed" && h.status !== "cancelled" && (
+                      <button
+                        onClick={() => confirm(h)}
+                        className="text-xs font-medium text-[var(--brand-gold-ink)] hover:underline"
+                      >
+                        Confirm
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

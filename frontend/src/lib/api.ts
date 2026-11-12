@@ -19,6 +19,7 @@ import type {
   EvidenceAnalysis,
   Expense,
   FinanceSummary,
+  Hearing,
   Invite,
   Invoice,
   Lead,
@@ -176,6 +177,20 @@ export const api = {
   reportSummary: () => request<CaseSummary>("/reports/summary"),
 
   casesCsvUrl: () => `${V1}/reports/cases.csv`,
+
+  // --- hearings --------------------------------------------------------------
+  listCaseHearings: (caseId: string) => request<Hearing[]>(`/cases/${caseId}/hearings`),
+
+  createHearing: (
+    caseId: string,
+    input: { scheduled_at: string; court_name?: string; notes?: string },
+  ) => request<Hearing>(`/cases/${caseId}/hearings`, { method: "POST", body: JSON.stringify(input) }),
+
+  confirmHearing: (hearingId: string, confirmation_source: string) =>
+    request<Hearing>(`/hearings/${hearingId}/confirm`, {
+      method: "POST",
+      body: JSON.stringify({ confirmation_source }),
+    }),
 
   // --- hearing reminders -----------------------------------------------------
   dispatchReminders: (withinHours = 48) =>
