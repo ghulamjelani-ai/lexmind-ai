@@ -53,7 +53,7 @@ function ResetForm() {
   }
 
   return (
-    <AuthShell rightLink={{ href: "/login", label: "Sign in" }}>
+    <AuthShell>
     <main className="flex flex-1 items-stretch">
       <div className="hidden w-1/2 flex-col justify-between bg-[var(--brand-ink)] p-12 lg:flex">
         <Link href="/">

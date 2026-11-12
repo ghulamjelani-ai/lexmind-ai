@@ -47,7 +47,7 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthShell rightLink={{ href: "/signup", label: "Create a chamber" }}>
+    <AuthShell>
     <main className="flex flex-1 items-stretch">
       {/* Brand panel */}
       <div className="hidden w-1/2 flex-col justify-between bg-[var(--brand-ink)] p-12 lg:flex">

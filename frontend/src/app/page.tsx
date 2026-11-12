@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { LandingChat } from "@/components/landing-chat";
 import { Logo } from "@/components/logo";
+import { SiteHeader } from "@/components/site-header";
 
 export const metadata = {
   title: "LexMind — AI legal intelligence for Pakistani law chambers",
@@ -29,26 +30,6 @@ export default function LandingPage() {
 }
 
 /* ------------------------------------------------------------------ */
-
-function SiteHeader() {
-  return (
-    <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--bg)_88%,transparent)] backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <Logo size={30} />
-        <nav className="hidden items-center gap-7 text-sm text-[var(--muted)] md:flex">
-          <a href="#features" className="hover:text-[var(--text)]">Features</a>
-          <a href="#how" className="hover:text-[var(--text)]">How it works</a>
-          <a href="#security" className="hover:text-[var(--text)]">Security</a>
-          <a href="#pricing" className="hover:text-[var(--text)]">Pricing</a>
-        </nav>
-        <div className="flex items-center gap-2.5">
-          <Link href="/login" className="btn btn-ghost">Sign in</Link>
-          <Link href="/signup" className="btn btn-primary">Start free</Link>
-        </div>
-      </div>
-    </header>
-  );
-}
 
 function Hero() {
   return (
