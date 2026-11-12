@@ -106,7 +106,7 @@ export default function IntakePage() {
       )}
 
       {leads.length === 0 ? (
-        <EmptyState title="No intakes yet" hint="Capture a prospective client above to run a conflict check." />
+        <EmptyState icon="intake" title="No intakes yet" hint="Capture a prospective client above to run a conflict check." />
       ) : (
         <div className="space-y-3">
           {leads.map((lead) => (

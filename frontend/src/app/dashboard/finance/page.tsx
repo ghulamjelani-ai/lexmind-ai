@@ -237,7 +237,7 @@ function InvoicesTab({ clients, onChange }: { clients: ClientLite[]; onChange: (
       </Card>
 
       {invoices.length === 0 ? (
-        <EmptyState title="No invoices yet" hint="Create one above." />
+        <EmptyState icon="receipt" title="No invoices yet" hint="Create one above." />
       ) : (
         <div className="space-y-3">
           {invoices.map((inv) => (
@@ -379,7 +379,7 @@ function ExpensesTab({ onChange }: { onChange: () => void }) {
         </form>
       </Card>
       {expenses.length === 0 ? (
-        <EmptyState title="No expenses yet" />
+        <EmptyState icon="wallet" title="No expenses yet" hint="Record your first expense above." />
       ) : (
         <div className="card overflow-hidden p-0">
           <table className="w-full text-left text-sm">

@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { Icon } from "@/components/icons";
+
 export function PageHeader({
   eyebrow,
   title,
@@ -54,11 +56,25 @@ export function LevelBadge({ level }: { level: string }) {
   return <span className={`badge ${LEVEL[level] ?? "badge-muted"}`}>{level}</span>;
 }
 
-export function EmptyState({ title, hint }: { title: string; hint?: string }) {
+export function EmptyState({
+  title,
+  hint,
+  icon = "folder",
+  action,
+}: {
+  title: string;
+  hint?: string;
+  icon?: string;
+  action?: ReactNode;
+}) {
   return (
-    <div className="surface-muted flex flex-col items-center justify-center px-6 py-10 text-center">
+    <div className="surface-muted flex flex-col items-center justify-center px-6 py-12 text-center">
+      <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--muted)] ring-1 ring-[var(--border)]">
+        <Icon name={icon} className="h-5 w-5" />
+      </span>
       <p className="text-sm font-medium text-[var(--text)]">{title}</p>
       {hint && <p className="mt-1 max-w-sm text-sm text-[var(--muted)]">{hint}</p>}
+      {action && <div className="mt-4">{action}</div>}
     </div>
   );
 }

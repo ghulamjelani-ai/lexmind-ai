@@ -48,7 +48,7 @@ export default function ReportsPage() {
         }
       />
 
-      {error && <EmptyState title="Unable to load reports" hint={error} />}
+      {error && <EmptyState icon="alert" title="Unable to load reports" hint={error} />}
 
       {/* Financial overview */}
       {finance && (

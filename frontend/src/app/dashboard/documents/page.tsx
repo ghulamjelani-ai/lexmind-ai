@@ -144,7 +144,7 @@ export default function DocumentsPage() {
       </Card>
 
       {docs.length === 0 ? (
-        <EmptyState title="No documents yet" hint="Upload your first file above." />
+        <EmptyState icon="doc" title="No documents yet" hint="Upload your first file above." />
       ) : (
         <div className="card overflow-hidden p-0">
           <table className="w-full text-left text-sm">

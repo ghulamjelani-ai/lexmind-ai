@@ -199,7 +199,7 @@ function Overview({
 
       <p className="eyebrow mt-8 mb-3">Timeline</p>
       {events.length === 0 ? (
-        <EmptyState title="No activity yet" />
+        <EmptyState icon="clock" title="No activity yet" hint="Status changes and notes will appear here." />
       ) : (
         <ol className="space-y-3 border-l border-[var(--border)] pl-5">
           {events.map((e) => (
@@ -450,7 +450,7 @@ function AnalysisTab({
       {items === null ? (
         <p className="text-sm text-[var(--muted)]">Loading…</p>
       ) : items.length === 0 ? (
-        <EmptyState title="No analysis yet" hint="Generate one to see the structured report." />
+        <EmptyState icon="spark" title="No analysis yet" hint="Generate one to see the structured report." />
       ) : (
         <div className="space-y-3">
           {items.map((a) => {
@@ -532,7 +532,7 @@ function EvidenceTab({ caseId }: { caseId: string }) {
       </div>
 
       {!result ? (
-        <EmptyState title="No evidence map yet" hint="Run the analysis to build one." />
+        <EmptyState icon="scale" title="No evidence map yet" hint="Run the analysis to build one." />
       ) : (
         <>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -709,7 +709,7 @@ function DraftsTab({
       {items === null ? (
         <p className="text-sm text-[var(--muted)]">Loading…</p>
       ) : items.length === 0 ? (
-        <EmptyState title="No drafts yet" hint="Generate your first draft above." />
+        <EmptyState icon="doc" title="No drafts yet" hint="Generate your first draft above." />
       ) : (
         <div className="space-y-3">
           {items.map((d) => {

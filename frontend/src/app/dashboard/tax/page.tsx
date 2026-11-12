@@ -33,7 +33,7 @@ export default function TaxPage() {
         }
       />
 
-      {error && <EmptyState title="Unable to load" hint={error} />}
+      {error && <EmptyState icon="alert" title="Unable to load" hint={error} />}
 
       <AskBox />
 

@@ -122,7 +122,7 @@ export default function ClientsPage() {
       </div>
 
       {clients.length === 0 ? (
-        <EmptyState title="No clients yet" hint="Add one above, or convert a lead from Intake." />
+        <EmptyState icon="users" title="No clients yet" hint="Add one above, or convert a lead from Intake." />
       ) : (
         <div className="card overflow-hidden p-0">
           <table className="w-full text-left text-sm">

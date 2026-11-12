@@ -114,7 +114,7 @@ export default function UsersPage() {
             ) : users.length === 0 ? (
               <tr>
                 <td colSpan={4} className="p-4">
-                  <EmptyState title="No users yet" />
+                  <EmptyState icon="users" title="No users yet" hint="Invite your chamber's staff to collaborate." />
                 </td>
               </tr>
             ) : (
