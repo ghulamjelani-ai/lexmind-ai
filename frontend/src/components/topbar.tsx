@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
+import { MobileNav } from "@/components/mobile-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/lib/auth-context";
 
@@ -23,14 +24,17 @@ export function Topbar() {
       .toUpperCase() ?? "··";
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-6">
-      <div className="text-sm text-[var(--muted)]">
-        {me ? (
-          <span>
-            Signed in as{" "}
-            <span className="font-medium text-[var(--text)]">{me.user.full_name}</span>
-          </span>
-        ) : null}
+    <header className="flex h-16 items-center justify-between border-b border-[var(--border)] bg-[var(--surface)] px-4 sm:px-6">
+      <div className="flex items-center gap-3">
+        <MobileNav />
+        <div className="hidden text-sm text-[var(--muted)] sm:block">
+          {me ? (
+            <span>
+              Signed in as{" "}
+              <span className="font-medium text-[var(--text)]">{me.user.full_name}</span>
+            </span>
+          ) : null}
+        </div>
       </div>
       <div className="flex items-center gap-3">
         {me && (

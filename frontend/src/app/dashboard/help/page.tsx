@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { Icon } from "@/components/icons";
 import { Card, PageHeader } from "@/components/ui";
 
-const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "support@lexmind.pk";
+const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "lexmindai024@gmail.com";
 
 const MODULE_ICONS: Record<string, string> = {
   Intake: "intake",
