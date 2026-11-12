@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { InterfaceMap } from "@/components/guide-figures";
 import { Icon } from "@/components/icons";
 import { Card, PageHeader } from "@/components/ui";
 
@@ -44,6 +45,38 @@ export default function HelpPage() {
             </li>
           ))}
         </ol>
+      </Card>
+
+      {/* Visual walkthrough */}
+      <Card>
+        <p className="eyebrow mb-3">The screen at a glance</p>
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3">
+          <InterfaceMap />
+        </div>
+        <ol className="mt-4 grid gap-2.5 text-sm sm:grid-cols-2">
+          <Legend n={1}>
+            <strong>Sidebar</strong> — switch between sections (Cases, Clients, AI, Tax…). This is where you go.
+          </Legend>
+          <Legend n={2}>
+            <strong>Create area</strong> — add a new case, client or document from the form at the top.
+          </Legend>
+          <Legend n={3}>
+            <strong>Your list</strong> — records appear below; click a row to open its full detail.
+          </Legend>
+          <Legend n={4}>
+            <strong>Top-right</strong> — switch the light/dark theme and sign out.
+          </Legend>
+        </ol>
+      </Card>
+
+      {/* Core journey */}
+      <Card>
+        <p className="eyebrow mb-4">Your first case, in 3 moves</p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Journey icon="users" step="1" title="Add a client" body="Clients → fill name & CNIC → Add client." />
+          <Journey icon="folder" step="2" title="Create a case" body="Cases → title + category → Create case." />
+          <Journey icon="spark" step="3" title="Ask the AI" body="AI Assistant → start a chat → ask or pick a question." />
+        </div>
       </Card>
 
       {/* Modules */}
@@ -142,6 +175,32 @@ function Point({ title, children }: { title: string; children: ReactNode }) {
     <div>
       <p className="text-sm font-medium text-[var(--text)]">{title}</p>
       <p>{children}</p>
+    </div>
+  );
+}
+
+function Legend({ n, children }: { n: number; children: ReactNode }) {
+  return (
+    <li className="flex items-start gap-2.5">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--brand-gold)] text-xs font-bold text-[#3a2a06]">
+        {n}
+      </span>
+      <span className="text-[var(--muted)]">{children}</span>
+    </li>
+  );
+}
+
+function Journey({ icon, step, title, body }: { icon: string; step: string; title: string; body: string }) {
+  return (
+    <div className="surface-muted p-4">
+      <div className="flex items-center gap-2.5">
+        <span className="flex h-9 w-9 items-center justify-center rounded-[10px] bg-[var(--brand-ink)] text-[var(--brand-gold)]">
+          <Icon name={icon} className="h-[18px] w-[18px]" />
+        </span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Step {step}</span>
+      </div>
+      <p className="mt-2.5 font-serif text-base font-semibold text-[var(--text)]">{title}</p>
+      <p className="mt-1 text-sm text-[var(--muted)]">{body}</p>
     </div>
   );
 }
