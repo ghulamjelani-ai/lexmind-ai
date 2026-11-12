@@ -68,10 +68,10 @@ export function InterfaceMap() {
       ))}
 
       {/* Callouts */}
-      <Callout x="150" y="150" n={1} gold={gold} />
-      <Callout x="300" y="60" n={2} gold={gold} />
-      <Callout x="300" y="196" n={3} gold={gold} />
-      <Callout x="604" y="18" n={4} gold={gold} />
+      <Callout x={150} y={150} n={1} gold={gold} />
+      <Callout x={300} y={60} n={2} gold={gold} />
+      <Callout x={300} y={196} n={3} gold={gold} />
+      <Callout x={604} y={18} n={4} gold={gold} />
     </svg>
   );
 }
