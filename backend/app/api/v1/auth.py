@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_auth_context, get_current_user, get_tenant_db
 from app.core.config import get_settings
+from app.core.email import send_email
 from app.core.ratelimit import rate_limit
 from app.core.rbac import AuthContext
 from app.db.session import get_db
@@ -181,14 +182,22 @@ def mfa_disable(
 def password_reset_request(
     body: PasswordResetRequestIn, db: Session = Depends(get_db)
 ) -> MessageOut:
-    # Always returns the same message (no account enumeration). The token is
-    # delivered out-of-band (logged in dev; emailed once notifications land).
+    # Always returns the same message (no account enumeration).
     token = password_reset_service.request_reset(db, body.org_slug, body.email)
     db.commit()
-    if token and get_settings().environment != "production":
-        import logging
-
-        logging.getLogger(__name__).info("Password reset token for %s: %s", body.email, token)
+    if token:
+        settings = get_settings()
+        reset_url = f"{settings.app_url.rstrip('/')}/reset-password?token={token}"
+        send_email(
+            body.email,
+            "Reset your LexMind password",
+            (
+                "We received a request to reset your LexMind password.\n\n"
+                f"Reset it here (valid for {settings.password_reset_ttl_minutes} minutes):\n"
+                f"{reset_url}\n\n"
+                "If you didn't request this, you can safely ignore this email."
+            ),
+        )
     return MessageOut(message="If the account exists, a reset link has been sent.")
 
 

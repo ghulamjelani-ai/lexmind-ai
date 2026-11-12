@@ -5,6 +5,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_tenant_db, require
+from app.core.config import get_settings
+from app.core.email import send_email
 from app.core.rbac import AuthContext
 from app.db.session import get_db
 from app.models.auth import Invite
@@ -38,6 +40,19 @@ def create_invite(
     except invite_service.InviteError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     db.commit()
+    settings = get_settings()
+    accept_url = f"{settings.app_url.rstrip('/')}/accept-invite?token={token}"
+    send_email(
+        invite.email,
+        "You're invited to a LexMind chamber",
+        (
+            "You have been invited to join a chamber on LexMind as "
+            f"{body.role}.\n\n"
+            f"Accept the invitation and set your password here (valid for "
+            f"{settings.invite_ttl_hours // 24} days):\n{accept_url}\n\n"
+            "If you weren't expecting this, you can ignore this email."
+        ),
+    )
     return InviteCreatedOut(id=invite.id, email=invite.email, role=body.role, token=token)
 
 

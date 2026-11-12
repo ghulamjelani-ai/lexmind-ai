@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -92,6 +93,15 @@ export default function LoginPage() {
               {submitting ? "Signing in…" : "Sign in"}
             </button>
           </form>
+
+          <div className="mt-5 flex items-center justify-between text-sm">
+            <Link href="/forgot-password" className="text-[var(--muted)] hover:text-[var(--text)]">
+              Forgot password?
+            </Link>
+            <Link href="/signup" className="font-medium text-[var(--brand-gold-ink)] hover:underline">
+              Create a chamber
+            </Link>
+          </div>
         </div>
       </div>
     </main>

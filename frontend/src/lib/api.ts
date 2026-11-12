@@ -106,6 +106,18 @@ export const api = {
       body: JSON.stringify({ org_slug, email, password, mfa_code }),
     }),
 
+  passwordResetRequest: (org_slug: string, email: string) =>
+    request<{ message: string }>("/auth/password-reset/request", {
+      method: "POST",
+      body: JSON.stringify({ org_slug, email }),
+    }),
+
+  passwordResetConfirm: (token: string, new_password: string) =>
+    request<{ message: string }>("/auth/password-reset/confirm", {
+      method: "POST",
+      body: JSON.stringify({ token, new_password }),
+    }),
+
   logout: () => request<{ message: string }>("/auth/logout", { method: "POST" }),
 
   me: () => request<Me>("/auth/me"),

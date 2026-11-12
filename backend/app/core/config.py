@@ -93,6 +93,19 @@ class Settings(BaseSettings):
     password_reset_ttl_minutes: int = 60
     invite_ttl_hours: int = 168  # 7 days
 
+    # Email (SMTP). When smtp_host + smtp_user + smtp_password are set, the app
+    # sends real transactional email (password reset, invites); otherwise it
+    # logs what it would have sent. For Gmail use smtp.gmail.com:587 with an
+    # app password (not the account password).
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
+    smtp_tls: bool = True
+    # Public base URL of the web app, used to build links inside emails.
+    app_url: str = "http://localhost:3000"
+
     # Datastores (populated by docker-compose / env in each environment)
     # database_url is the privileged connection (migrations + pre-tenant auth
     # bootstrap). It is a superuser/owner and bypasses RLS.
