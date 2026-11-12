@@ -94,8 +94,8 @@ export default function UsersPage() {
         </Card>
       )}
 
-      <div className="card overflow-hidden p-0">
-        <table className="w-full text-left text-sm">
+      <div className="card overflow-x-auto p-0">
+        <table className="w-full min-w-[640px] text-left text-sm">
           <thead>
             <tr className="border-b border-[var(--border)] bg-[var(--surface-2)]">
               <Th>Name</Th>

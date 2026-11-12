@@ -124,8 +124,8 @@ export default function ClientsPage() {
       {clients.length === 0 ? (
         <EmptyState icon="users" title="No clients yet" hint="Add one above, or convert a lead from Intake." />
       ) : (
-        <div className="card overflow-hidden p-0">
-          <table className="w-full text-left text-sm">
+        <div className="card overflow-x-auto p-0">
+          <table className="w-full min-w-[640px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--border)] bg-[var(--surface-2)] text-xs uppercase tracking-wide text-[var(--muted)]">
                 <th className="px-4 py-2.5 font-semibold">Name</th>

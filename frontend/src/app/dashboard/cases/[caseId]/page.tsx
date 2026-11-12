@@ -334,8 +334,8 @@ function HearingsTab({
           hint={canManage ? "Schedule one above." : "No hearings scheduled for this case."}
         />
       ) : (
-        <div className="card overflow-hidden p-0">
-          <table className="w-full text-left text-sm">
+        <div className="card overflow-x-auto p-0">
+          <table className="w-full min-w-[560px] text-left text-sm">
             <thead>
               <tr className="border-b border-[var(--border)] bg-[var(--surface-2)] text-xs uppercase tracking-wide text-[var(--muted)]">
                 <th className="px-4 py-2.5 font-semibold">When</th>

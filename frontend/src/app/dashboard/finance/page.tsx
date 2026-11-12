@@ -381,8 +381,8 @@ function ExpensesTab({ onChange }: { onChange: () => void }) {
       {expenses.length === 0 ? (
         <EmptyState icon="wallet" title="No expenses yet" hint="Record your first expense above." />
       ) : (
-        <div className="card overflow-hidden p-0">
-          <table className="w-full text-left text-sm">
+        <div className="card overflow-x-auto p-0">
+          <table className="w-full min-w-[560px] text-left text-sm">
             <tbody>
               {expenses.map((x) => (
                 <tr key={x.id} className="border-b border-[var(--border)] last:border-0">
