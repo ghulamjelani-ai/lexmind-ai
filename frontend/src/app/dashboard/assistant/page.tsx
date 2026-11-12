@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Icon } from "@/components/icons";
+import { Markdown } from "@/components/markdown";
 import { PageHeader } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import type { AiChatMessage, Case, Citation, Conversation } from "@/types";
@@ -173,13 +174,21 @@ export default function AssistantPage() {
               messages.map((m) => (
                 <div key={m.id} className={m.role === "user" ? "text-right" : ""}>
                   <div
-                    className={`inline-block max-w-[85%] whitespace-pre-wrap rounded-2xl px-3.5 py-2 text-sm ${
+                    className={`inline-block max-w-[85%] rounded-2xl px-3.5 py-2 text-sm ${
                       m.role === "user"
-                        ? "rounded-br-sm bg-[var(--brand-ink)] text-white"
-                        : "rounded-bl-sm bg-[var(--surface-2)] text-[var(--text)]"
+                        ? "whitespace-pre-wrap rounded-br-sm bg-[var(--brand-ink)] text-white"
+                        : "rounded-bl-sm bg-[var(--surface-2)] text-left text-[var(--text)]"
                     }`}
                   >
-                    {m.content || <span className="text-[var(--muted)]">…</span>}
+                    {m.content ? (
+                      m.role === "assistant" ? (
+                        <Markdown content={m.content} />
+                      ) : (
+                        m.content
+                      )
+                    ) : (
+                      <span className="text-[var(--muted)]">…</span>
+                    )}
                   </div>
                   {m.citations_json.length > 0 && (
                     <div className="mt-1 text-left text-xs text-[var(--muted)]">

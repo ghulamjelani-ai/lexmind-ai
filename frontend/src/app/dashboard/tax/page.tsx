@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Icon } from "@/components/icons";
+import { Markdown } from "@/components/markdown";
 import { Card, EmptyState, PageHeader } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import { TAX_EXAMPLES, validateTaxQuery } from "@/lib/tax-guard";
@@ -281,9 +282,9 @@ function AskBox() {
       {/* Answer */}
       {result && result.forwarded_to_ai && (
         <div className="mt-3 space-y-3">
-          <p className="whitespace-pre-wrap rounded-[10px] bg-[var(--surface-2)] px-4 py-3 text-sm leading-relaxed text-[var(--text)]">
-            {result.answer}
-          </p>
+          <div className="rounded-[10px] bg-[var(--surface-2)] px-4 py-3 text-sm leading-relaxed text-[var(--text)]">
+            <Markdown content={result.answer} />
+          </div>
           {result.sources.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {result.sources.slice(0, 5).map((s) => (
