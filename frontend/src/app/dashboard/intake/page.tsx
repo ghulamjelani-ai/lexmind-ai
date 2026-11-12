@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Icon } from "@/components/icons";
+import { useToast } from "@/components/toast";
 import { Card, EmptyState, PageHeader } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -28,6 +29,7 @@ export default function IntakePage() {
     description: "",
   });
   const [busy, setBusy] = useState(false);
+  const toast = useToast();
 
   const canCreate = can("cases:create");
 
@@ -57,10 +59,14 @@ export default function IntakePage() {
         matter_type: form.matter_type.trim() || undefined,
         description: form.description.trim() || undefined,
       });
+      const name = form.full_name.trim();
       setForm({ full_name: "", opposing_party: "", email: "", phone: "", matter_type: "", description: "" });
       await load();
+      toast.success("Lead screened", `${name} added and checked for conflicts.`);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to screen lead");
+      const msg = e instanceof ApiError ? e.message : "Failed to screen lead";
+      setError(msg);
+      toast.error("Couldn't screen lead", msg);
     } finally {
       setBusy(false);
     }
@@ -115,6 +121,7 @@ export default function IntakePage() {
 function LeadRow({ lead, canCreate, onChange }: { lead: Lead; canCreate: boolean; onChange: () => void }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const toast = useToast();
   const level = LEVEL[lead.conflict_level] ?? LEVEL.pending;
   const isBlock = lead.conflict_level === "block";
 
@@ -124,18 +131,25 @@ function LeadRow({ lead, canCreate, onChange }: { lead: Lead; canCreate: boolean
     try {
       await api.convertLead(lead.id, { category: lead.matter_type || "other", override });
       onChange();
+      toast.success("Lead converted", `${lead.full_name} is now an active case.`);
     } catch (e) {
-      setErr(e instanceof ApiError ? e.message : "Could not convert");
+      const msg = e instanceof ApiError ? e.message : "Could not convert";
+      setErr(msg);
+      toast.error("Couldn't convert lead", msg);
     } finally {
       setBusy(false);
     }
   }
 
   async function reject() {
+    if (!window.confirm(`Reject the lead for ${lead.full_name}?`)) return;
     setBusy(true);
     try {
       await api.rejectLead(lead.id);
       onChange();
+      toast.success("Lead rejected", `${lead.full_name} has been removed from intake.`);
+    } catch (e) {
+      toast.error("Couldn't reject lead", e instanceof ApiError ? e.message : "Please try again.");
     } finally {
       setBusy(false);
     }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { useToast } from "@/components/toast";
 import { Card, EmptyState, PageHeader } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import type { Client } from "@/types";
@@ -12,6 +13,7 @@ export default function ClientsPage() {
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({ full_name: "", email: "", phone: "", cnic: "", address: "" });
   const [busy, setBusy] = useState(false);
+  const toast = useToast();
 
   async function load() {
     try {
@@ -58,18 +60,29 @@ export default function ClientsPage() {
         cnic: form.cnic.trim() || undefined,
         address: form.address.trim() || undefined,
       });
+      const name = form.full_name.trim();
       setForm({ full_name: "", email: "", phone: "", cnic: "", address: "" });
       await load();
+      toast.success("Client added", `${name} has been added to your chamber.`);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to add client");
+      const msg = e instanceof ApiError ? e.message : "Failed to add client";
+      setError(msg);
+      toast.error("Couldn't add client", msg);
     } finally {
       setBusy(false);
     }
   }
 
   async function remove(id: string) {
-    await api.deleteClient(id);
-    await load();
+    const client = clients.find((c) => c.id === id);
+    if (!window.confirm(`Delete ${client?.full_name ?? "this client"}? This cannot be undone.`)) return;
+    try {
+      await api.deleteClient(id);
+      await load();
+      toast.success("Client deleted", `${client?.full_name ?? "The client"} has been removed.`);
+    } catch (e) {
+      toast.error("Couldn't delete client", e instanceof ApiError ? e.message : "Please try again.");
+    }
   }
 
   return (

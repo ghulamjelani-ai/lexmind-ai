@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Icon } from "@/components/icons";
+import { useToast } from "@/components/toast";
 import { Card, EmptyState, LevelBadge, PageHeader } from "@/components/ui";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -16,6 +17,7 @@ export default function DashboardHome() {
   const [queue, setQueue] = useState<PriorityScore[] | null>(null);
   const [reminderMsg, setReminderMsg] = useState<string | null>(null);
   const [dispatching, setDispatching] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     api.myOrg().then(setOrg).catch(() => setOrg(null));
@@ -29,13 +31,17 @@ export default function DashboardHome() {
     setReminderMsg(null);
     try {
       const r = await api.dispatchReminders(48);
-      setReminderMsg(
-        r.reminders_created > 0
-          ? `Sent ${r.reminders_created} hearing reminder(s) for the next 48 hours.`
-          : "No new reminders — everyone is already up to date.",
-      );
+      if (r.reminders_created > 0) {
+        const line = `Sent ${r.reminders_created} hearing reminder(s) for the next 48 hours.`;
+        setReminderMsg(line);
+        toast.success("Reminders dispatched", line);
+      } else {
+        setReminderMsg("No new reminders — everyone is already up to date.");
+        toast.info("No new reminders", "Everyone is already up to date.");
+      }
     } catch {
       setReminderMsg("Could not dispatch reminders.");
+      toast.error("Couldn't dispatch reminders", "Please try again.");
     } finally {
       setDispatching(false);
     }

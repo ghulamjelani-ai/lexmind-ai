@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { useToast } from "@/components/toast";
 import { Card, EmptyState, PageHeader } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -19,6 +20,7 @@ export default function UsersPage() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
   const [creating, setCreating] = useState(false);
+  const toast = useToast();
 
   async function load() {
     setLoading(true);
@@ -44,13 +46,17 @@ export default function UsersPage() {
     setError(null);
     setCreating(true);
     try {
+      const name = fullName.trim() || email.trim();
       await api.createUser({ email, full_name: fullName, password, role });
       setEmail("");
       setFullName("");
       setPassword("");
       await load();
+      toast.success("User created", `${name} can now sign in to your chamber.`);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to create user");
+      const msg = err instanceof ApiError ? err.message : "Failed to create user";
+      setError(msg);
+      toast.error("Couldn't create user", msg);
     } finally {
       setCreating(false);
     }

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Icon } from "@/components/icons";
+import { useToast } from "@/components/toast";
 import { Card, EmptyState, PageHeader } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import type { LegalDocument } from "@/types";
@@ -44,6 +45,7 @@ export default function DocumentsPage() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const toast = useToast();
 
   async function load() {
     try {
@@ -63,13 +65,17 @@ export default function DocumentsPage() {
     setBusy(true);
     setError(null);
     try {
+      const t = title.trim();
       await api.uploadDocument(file, title.trim(), category);
       setTitle("");
       setFile(null);
       if (fileRef.current) fileRef.current.value = "";
       await load();
+      toast.success("Document uploaded", `"${t}" has been added to your documents.`);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Upload failed");
+      const m = e instanceof ApiError ? e.message : "Upload failed";
+      setError(m);
+      toast.error("Upload failed", m);
     } finally {
       setBusy(false);
     }
@@ -81,14 +87,23 @@ export default function DocumentsPage() {
       await api.indexDocument(d.id);
       setMsg(`“${d.title}” indexed into the knowledge base — the AI can now cite it.`);
       await load();
+      toast.success("Document indexed", `The AI can now cite "${d.title}".`);
     } catch (e) {
-      setMsg(e instanceof ApiError ? e.message : "Indexing failed");
+      const m = e instanceof ApiError ? e.message : "Indexing failed";
+      setMsg(m);
+      toast.error("Indexing failed", m);
     }
   }
 
   async function remove(d: LegalDocument) {
-    await api.deleteDocument(d.id);
-    await load();
+    if (!window.confirm(`Delete “${d.title}”? This cannot be undone.`)) return;
+    try {
+      await api.deleteDocument(d.id);
+      await load();
+      toast.success("Document deleted", `"${d.title}" has been removed.`);
+    } catch (e) {
+      toast.error("Couldn't delete document", e instanceof ApiError ? e.message : "Please try again.");
+    }
   }
 
   return (

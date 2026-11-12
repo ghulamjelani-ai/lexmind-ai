@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { useToast } from "@/components/toast";
 import { Card, PageHeader } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -74,6 +75,7 @@ function MfaCard() {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const toast = useToast();
 
   // Render the authenticator QR entirely in the browser — the secret never
   // leaves the device (no third-party QR service).
@@ -121,8 +123,11 @@ function MfaCard() {
       setMode("idle");
       setCode("");
       setSecret(null);
+      toast.success("Two-factor enabled", "Your account is now protected with an authenticator app.");
     } catch (e) {
-      setErr(e instanceof ApiError ? e.message : "Invalid code");
+      const m = e instanceof ApiError ? e.message : "Invalid code";
+      setErr(m);
+      toast.error("Couldn't enable two-factor", m);
     } finally {
       setBusy(false);
     }
@@ -136,8 +141,11 @@ function MfaCard() {
       setMsg("Two-factor authentication disabled.");
       setMode("idle");
       setCode("");
+      toast.success("Two-factor disabled", "Authenticator app is no longer required to sign in.");
     } catch (e) {
-      setErr(e instanceof ApiError ? e.message : "Invalid code");
+      const m = e instanceof ApiError ? e.message : "Invalid code";
+      setErr(m);
+      toast.error("Couldn't disable two-factor", m);
     } finally {
       setBusy(false);
     }

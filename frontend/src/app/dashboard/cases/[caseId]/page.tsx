@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Icon } from "@/components/icons";
+import { useToast } from "@/components/toast";
 import { EmptyState, VerificationBadge } from "@/components/ui";
 import { api, ApiError, CASE_STATUSES } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -22,6 +23,7 @@ export default function CaseDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState("");
   const [tab, setTab] = useState<Tab>("overview");
+  const toast = useToast();
 
   async function load() {
     try {
@@ -39,16 +41,26 @@ export default function CaseDetailPage() {
   }, [caseId]);
 
   async function changeStatus(status: string) {
-    await api.updateCase(caseId, { status });
-    await load();
+    try {
+      await api.updateCase(caseId, { status });
+      await load();
+      toast.success("Status updated", `Case moved to "${status.replace(/_/g, " ")}".`);
+    } catch (err) {
+      toast.error("Couldn't update status", err instanceof ApiError ? err.message : "Please try again.");
+    }
   }
 
   async function submitNote(e: React.FormEvent) {
     e.preventDefault();
     if (!note.trim()) return;
-    await api.addCaseNote(caseId, note.trim());
-    setNote("");
-    await load();
+    try {
+      await api.addCaseNote(caseId, note.trim());
+      setNote("");
+      await load();
+      toast.success("Note added", "Your note has been saved to the case timeline.");
+    } catch (err) {
+      toast.error("Couldn't add note", err instanceof ApiError ? err.message : "Please try again.");
+    }
   }
 
   if (error) {
@@ -224,6 +236,7 @@ function HearingsTab({
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
   async function load() {
     try {
@@ -257,8 +270,11 @@ function HearingsTab({
       setNotes("");
       await load();
       onChange();
+      toast.success("Hearing scheduled", "The hearing has been added to the case.");
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to add hearing");
+      const m = e instanceof ApiError ? e.message : "Failed to add hearing";
+      setError(m);
+      toast.error("Couldn't add hearing", m);
     } finally {
       setBusy(false);
     }
@@ -271,8 +287,11 @@ function HearingsTab({
       await api.confirmHearing(h.id, source.trim());
       await load();
       onChange();
+      toast.success("Hearing confirmed", `Verified against ${source.trim()}.`);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to confirm hearing");
+      const m = e instanceof ApiError ? e.message : "Failed to confirm hearing";
+      setError(m);
+      toast.error("Couldn't confirm hearing", m);
     }
   }
 
@@ -378,6 +397,7 @@ function AnalysisTab({
   const [items, setItems] = useState<CaseAnalysis[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
+  const toast = useToast();
 
   async function load() {
     setItems(await api.listAnalyses(caseId));
@@ -394,15 +414,23 @@ function AnalysisTab({
       setOpen(a.id);
       await load();
       onChange();
+      toast.success("Analysis ready", "Review the AI draft — verify it before relying on it.");
+    } catch (e) {
+      toast.error("Couldn't generate analysis", e instanceof ApiError ? e.message : "Please try again.");
     } finally {
       setBusy(false);
     }
   }
 
   async function approve(a: CaseAnalysis) {
-    await api.approveAnalysis(caseId, a.id);
-    await load();
-    onChange();
+    try {
+      await api.approveAnalysis(caseId, a.id);
+      await load();
+      onChange();
+      toast.success("Analysis approved", "Marked as reviewed and verified by a lawyer.");
+    } catch (e) {
+      toast.error("Couldn't approve analysis", e instanceof ApiError ? e.message : "Please try again.");
+    }
   }
 
   return (
@@ -588,6 +616,7 @@ function DraftsTab({
   const [instructions, setInstructions] = useState("");
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
+  const toast = useToast();
 
   async function load() {
     setItems(await api.listDrafts(caseId));
@@ -611,15 +640,23 @@ function DraftsTab({
       setInstructions("");
       await load();
       onChange();
+      toast.success("Draft ready", "Review and edit the AI draft before filing.");
+    } catch (err) {
+      toast.error("Couldn't generate draft", err instanceof ApiError ? err.message : "Please try again.");
     } finally {
       setBusy(false);
     }
   }
 
   async function approve(d: LegalDraft) {
-    await api.approveDraft(caseId, d.id);
-    await load();
-    onChange();
+    try {
+      await api.approveDraft(caseId, d.id);
+      await load();
+      onChange();
+      toast.success("Draft approved", "Marked as reviewed and approved.");
+    } catch (err) {
+      toast.error("Couldn't approve draft", err instanceof ApiError ? err.message : "Please try again.");
+    }
   }
 
   return (

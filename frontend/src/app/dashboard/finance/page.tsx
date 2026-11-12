@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Icon } from "@/components/icons";
+import { useToast } from "@/components/toast";
 import { Card, EmptyState, PageHeader } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import type { ClientLite, Expense, FinanceSummary, Invoice, TrustBalance } from "@/types";
@@ -125,6 +126,7 @@ function InvoicesTab({ clients, onChange }: { clients: ClientLite[]; onChange: (
   const [items, setItems] = useState([{ description: "", quantity: "1", unit: "" }]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const toast = useToast();
 
   async function load() {
     setInvoices(await api.listInvoices());
@@ -159,8 +161,11 @@ function InvoicesTab({ clients, onChange }: { clients: ClientLite[]; onChange: (
       setDue("");
       await load();
       onChange();
+      toast.success("Invoice created", "A draft invoice has been added.");
     } catch (e) {
-      setErr(e instanceof ApiError ? e.message : "Could not create invoice");
+      const m = e instanceof ApiError ? e.message : "Could not create invoice";
+      setErr(m);
+      toast.error("Couldn't create invoice", m);
     } finally {
       setBusy(false);
     }
@@ -250,6 +255,7 @@ function InvoiceRow({ invoice, onChange }: { invoice: Invoice; onChange: () => v
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [payOpen, setPayOpen] = useState(false);
+  const toast = useToast();
 
   async function pay() {
     setBusy(true);
@@ -259,16 +265,24 @@ function InvoiceRow({ invoice, onChange }: { invoice: Invoice; onChange: () => v
       setAmount("");
       setPayOpen(false);
       onChange();
+      toast.success("Payment recorded", `Payment applied to invoice ${invoice.number}.`);
     } catch (e) {
-      setErr(e instanceof ApiError ? e.message : "Payment failed");
+      const m = e instanceof ApiError ? e.message : "Payment failed";
+      setErr(m);
+      toast.error("Payment failed", m);
     } finally {
       setBusy(false);
     }
   }
 
   async function send() {
-    await api.sendInvoice(invoice.id);
-    onChange();
+    try {
+      await api.sendInvoice(invoice.id);
+      onChange();
+      toast.success("Invoice sent", `Invoice ${invoice.number} has been sent to the client.`);
+    } catch (e) {
+      toast.error("Couldn't send invoice", e instanceof ApiError ? e.message : "Please try again.");
+    }
   }
 
   return (
@@ -326,6 +340,7 @@ function ExpensesTab({ onChange }: { onChange: () => void }) {
   const [desc, setDesc] = useState("");
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
+  const toast = useToast();
 
   async function load() {
     setExpenses(await api.listExpenses());
@@ -339,11 +354,15 @@ function ExpensesTab({ onChange }: { onChange: () => void }) {
     if (!desc.trim() || !amount) return;
     setBusy(true);
     try {
-      await api.recordExpense({ description: desc.trim(), amount: toPaisa(amount) });
+      const d = desc.trim();
+      await api.recordExpense({ description: d, amount: toPaisa(amount) });
       setDesc("");
       setAmount("");
       await load();
       onChange();
+      toast.success("Expense recorded", `"${d}" has been added.`);
+    } catch (e) {
+      toast.error("Couldn't record expense", e instanceof ApiError ? e.message : "Please try again.");
     } finally {
       setBusy(false);
     }
@@ -388,6 +407,7 @@ function TrustTab({ clients, onChange }: { clients: ClientLite[]; onChange: () =
   const [kind, setKind] = useState("deposit");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const toast = useToast();
 
   async function load(id: string) {
     if (!id) return setData(null);
@@ -404,8 +424,11 @@ function TrustTab({ clients, onChange }: { clients: ClientLite[]; onChange: () =
       setAmount("");
       await load(clientId);
       onChange();
+      toast.success("Trust updated", `${kind === "deposit" ? "Deposit" : "Withdrawal"} recorded to the trust ledger.`);
     } catch (e) {
-      setErr(e instanceof ApiError ? e.message : "Transaction refused");
+      const m = e instanceof ApiError ? e.message : "Transaction refused";
+      setErr(m);
+      toast.error("Transaction refused", m);
     } finally {
       setBusy(false);
     }

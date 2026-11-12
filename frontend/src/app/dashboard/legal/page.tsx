@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Icon } from "@/components/icons";
+import { useToast } from "@/components/toast";
 import { Card, EmptyState, PageHeader, VerificationBadge } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import type { Provision } from "@/types";
@@ -14,6 +15,7 @@ export default function LegalLibraryPage() {
   const [section, setSection] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const toast = useToast();
 
   async function load() {
     try {
@@ -31,10 +33,18 @@ export default function LegalLibraryPage() {
   async function addProvision(e: React.FormEvent) {
     e.preventDefault();
     if (!lawName.trim()) return;
-    await api.createProvision({ law_name: lawName.trim(), section: section.trim() || undefined });
-    setLawName("");
-    setSection("");
-    await load();
+    try {
+      const name = lawName.trim();
+      await api.createProvision({ law_name: name, section: section.trim() || undefined });
+      setLawName("");
+      setSection("");
+      await load();
+      toast.success("Provision added", `${name} added to your legal library.`);
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : "Failed to add provision";
+      setError(msg);
+      toast.error("Couldn't add provision", msg);
+    }
   }
 
   async function verify(p: Provision) {
@@ -43,8 +53,11 @@ export default function LegalLibraryPage() {
       const res = await api.autoVerifyProvision(p.id);
       setNotes((n) => ({ ...n, [p.id]: res.note }));
       await load();
+      toast.success("Verification complete", `${p.law_name} checked against official sources.`);
     } catch (e) {
-      setNotes((n) => ({ ...n, [p.id]: e instanceof ApiError ? e.message : "Verification failed" }));
+      const msg = e instanceof ApiError ? e.message : "Verification failed";
+      setNotes((n) => ({ ...n, [p.id]: msg }));
+      toast.error("Verification failed", msg);
     } finally {
       setBusyId(null);
     }

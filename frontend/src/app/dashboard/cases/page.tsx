@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { useToast } from "@/components/toast";
 import { Card, EmptyState, PageHeader } from "@/components/ui";
 import { api, ApiError, CASE_CATEGORIES, CASE_STATUSES } from "@/lib/api";
 import type { Case } from "@/types";
@@ -26,6 +27,7 @@ export default function CasesPage() {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("criminal");
   const [creating, setCreating] = useState(false);
+  const toast = useToast();
 
   async function load() {
     setLoading(true);
@@ -50,11 +52,15 @@ export default function CasesPage() {
     setCreating(true);
     setError(null);
     try {
+      const t = title.trim();
       await api.createCase({ title, category });
       setTitle("");
       await load();
+      toast.success("Case created", `"${t}" has been added to your cases.`);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Failed to create case");
+      const msg = err instanceof ApiError ? err.message : "Failed to create case";
+      setError(msg);
+      toast.error("Couldn't create case", msg);
     } finally {
       setCreating(false);
     }
