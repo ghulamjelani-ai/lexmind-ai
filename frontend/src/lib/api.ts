@@ -38,7 +38,12 @@ import type {
   User,
 } from "@/types";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// In the browser we call our OWN origin ("/api/v1"); next.config rewrites proxy
+// it to the backend. That keeps the session cookie first-party, so it works in
+// every browser (modern browsers block third-party/cross-site cookies, which is
+// why a direct cross-domain API call stopped persisting logins). On the server
+// (SSR) or local dev, NEXT_PUBLIC_API_URL can still point straight at the API.
+const BASE = typeof window !== "undefined" ? "" : (process.env.NEXT_PUBLIC_API_URL ?? "");
 const V1 = `${BASE}/api/v1`;
 
 export class ApiError extends Error {
