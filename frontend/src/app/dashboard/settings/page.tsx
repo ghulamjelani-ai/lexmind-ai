@@ -69,10 +69,32 @@ function MfaCard() {
   const [mode, setMode] = useState<"idle" | "enrolling" | "disabling">("idle");
   const [secret, setSecret] = useState<string | null>(null);
   const [uri, setUri] = useState<string | null>(null);
+  const [qr, setQr] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // Render the authenticator QR entirely in the browser — the secret never
+  // leaves the device (no third-party QR service).
+  useEffect(() => {
+    if (!uri) {
+      setQr(null);
+      return;
+    }
+    let cancelled = false;
+    import("qrcode")
+      .then((QR) => QR.toDataURL(uri, { margin: 1, width: 196 }))
+      .then((url) => {
+        if (!cancelled) setQr(url);
+      })
+      .catch(() => {
+        if (!cancelled) setQr(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [uri]);
 
   async function startEnroll() {
     setErr(null);
@@ -140,10 +162,19 @@ function MfaCard() {
 
       {mode === "enrolling" && (
         <div className="space-y-3">
-          <div className="surface-muted p-3">
-            <p className="text-xs text-[var(--muted)]">Add this secret to your authenticator app:</p>
+          <div className="surface-muted p-4">
+            <p className="text-sm font-medium text-[var(--text)]">Scan with your authenticator app</p>
+            <p className="mt-0.5 text-xs text-[var(--muted)]">
+              Open Google Authenticator or Authy, tap “add”, and scan this code.
+            </p>
+            {qr ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={qr} alt="MFA QR code" width={160} height={160} className="mt-3 rounded-lg bg-white p-2" />
+            ) : (
+              <p className="mt-3 text-xs text-[var(--muted)]">Preparing QR…</p>
+            )}
+            <p className="mt-3 text-xs text-[var(--muted)]">Can’t scan? Enter this key manually:</p>
             <p className="mt-1 break-all font-mono text-sm text-[var(--text)]">{secret}</p>
-            {uri && <p className="mt-1 break-all text-[11px] text-[var(--muted)]">{uri}</p>}
           </div>
           <div className="flex items-end gap-2">
             <label>
