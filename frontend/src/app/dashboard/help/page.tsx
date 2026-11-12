@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { InterfaceMap } from "@/components/guide-figures";
 import { Icon } from "@/components/icons";
 import { Card, PageHeader } from "@/components/ui";
 
@@ -47,27 +46,27 @@ export default function HelpPage() {
         </ol>
       </Card>
 
-      {/* Visual walkthrough */}
-      <Card>
-        <p className="eyebrow mb-3">The screen at a glance</p>
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3">
-          <InterfaceMap />
+      {/* Visual walkthrough — real screenshots */}
+      <div>
+        <p className="eyebrow mb-3">A quick visual tour</p>
+        <div className="grid gap-5 sm:grid-cols-2">
+          {SHOTS.map((s) => (
+            <figure key={s.src} className="card overflow-hidden p-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={s.src}
+                alt={s.title}
+                loading="lazy"
+                className="w-full border-b border-[var(--border)]"
+              />
+              <figcaption className="p-4">
+                <p className="font-serif text-base font-semibold text-[var(--text)]">{s.title}</p>
+                <p className="mt-1 text-sm text-[var(--muted)]">{s.body}</p>
+              </figcaption>
+            </figure>
+          ))}
         </div>
-        <ol className="mt-4 grid gap-2.5 text-sm sm:grid-cols-2">
-          <Legend n={1}>
-            <strong>Sidebar</strong> — switch between sections (Cases, Clients, AI, Tax…). This is where you go.
-          </Legend>
-          <Legend n={2}>
-            <strong>Create area</strong> — add a new case, client or document from the form at the top.
-          </Legend>
-          <Legend n={3}>
-            <strong>Your list</strong> — records appear below; click a row to open its full detail.
-          </Legend>
-          <Legend n={4}>
-            <strong>Top-right</strong> — switch the light/dark theme and sign out.
-          </Legend>
-        </ol>
-      </Card>
+      </div>
 
       {/* Core journey */}
       <Card>
@@ -179,16 +178,33 @@ function Point({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Legend({ n, children }: { n: number; children: ReactNode }) {
-  return (
-    <li className="flex items-start gap-2.5">
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--brand-gold)] text-xs font-bold text-[#3a2a06]">
-        {n}
-      </span>
-      <span className="text-[var(--muted)]">{children}</span>
-    </li>
-  );
-}
+const SHOTS = [
+  {
+    src: "/guide/dashboard.jpg",
+    title: "Your dashboard",
+    body: "Priorities, hearings and portfolio health at a glance — the most urgent cases surface first.",
+  },
+  {
+    src: "/guide/cases.jpg",
+    title: "Cases",
+    body: "Create a matter from the form at the top; your cases list below. Click any row to open it.",
+  },
+  {
+    src: "/guide/case-detail.jpg",
+    title: "Inside a case",
+    body: "Status, hearings, AI case analysis, drafts and a full timeline — the whole matter in one place.",
+  },
+  {
+    src: "/guide/ai-assistant.jpg",
+    title: "AI Assistant",
+    body: "Ask a question and get a structured, cited answer — always flagged for a lawyer to verify before use.",
+  },
+  {
+    src: "/guide/tax.jpg",
+    title: "Tax intelligence",
+    body: "FBR/IRIS reference — filer status, NTN and deadlines — plus a tax assistant for specific questions.",
+  },
+];
 
 function Journey({ icon, step, title, body }: { icon: string; step: string; title: string; body: string }) {
   return (
