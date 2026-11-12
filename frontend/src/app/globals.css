@@ -33,8 +33,10 @@
   --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(11, 27, 58, 0.18);
 }
 
+/* Dark palette. Applied when the OS prefers dark and the user has not forced
+   light (system mode), and always when the user explicitly forces dark. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --brand-ink: #0b1b3a;
     --brand-gold: #f1c16a;
     --brand-gold-ink: #f1c16a;
@@ -58,6 +60,31 @@
 
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px -14px rgba(0, 0, 0, 0.6);
   }
+}
+
+:root[data-theme="dark"] {
+  --brand-ink: #0b1b3a;
+  --brand-gold: #f1c16a;
+  --brand-gold-ink: #f1c16a;
+
+  --bg: #070d1c;
+  --surface: #0d1630;
+  --surface-2: #121d3b;
+  --border: #1e2a4a;
+  --text: #e8ecf6;
+  --muted: #93a0bf;
+  --ring: #5b74b8;
+
+  --ok: #37d19a;
+  --ok-bg: #0e2a22;
+  --warn: #e7b24c;
+  --warn-bg: #2d2412;
+  --bad: #f4859b;
+  --bad-bg: #2d1620;
+  --info: #8fa6ec;
+  --info-bg: #141f3f;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px -14px rgba(0, 0, 0, 0.6);
 }
 
 @theme inline {

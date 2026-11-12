@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
+import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/lib/auth-context";
 
 export function Topbar() {
@@ -45,6 +46,7 @@ export function Topbar() {
             </div>
           </div>
         )}
+        <ThemeToggle />
         <button onClick={onLogout} className="btn btn-ghost">
           Sign out
         </button>

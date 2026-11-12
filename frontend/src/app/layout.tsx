@@ -20,12 +20,19 @@ export const metadata: Metadata = {
     "AI-powered legal intelligence and law chamber management platform for Pakistan.",
 };
 
+// Runs before paint: apply the saved theme so there is no light/dark flash.
+const themeScript = `(function(){try{var t=localStorage.getItem('lexmind-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
       className={`${inter.variable} ${fraunces.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-full flex flex-col">
         <AuthProvider>{children}</AuthProvider>
       </body>
