@@ -45,7 +45,7 @@ export function Logo({
         <path d="M11.5 24.5H20.5" stroke="var(--brand-gold)" strokeWidth="1.8" strokeLinecap="round" />
       </svg>
       {withWordmark && (
-        <span className="font-serif text-lg font-semibold tracking-tight text-[var(--brand-ink)] dark:text-white">
+        <span className="font-serif text-lg font-semibold tracking-tight text-[var(--text)]">
           Lex<span className="text-[var(--brand-gold-ink)]">Mind</span>
         </span>
       )}

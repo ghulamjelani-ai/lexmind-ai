@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+/* Map Tailwind's `dark:` variant to the app's theme (data-theme toggle, with
+ * OS preference as the fallback) so `dark:` utilities match the CSS-variable
+ * theme instead of only OS dark mode. Mirrors the token selectors below. */
+@custom-variant dark {
+  [data-theme="dark"] & {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) & {
+      @slot;
+    }
+  }
+}
+
 /* ------------------------------------------------------------------ *
  * LexMind design system
  * Deep navy for authority, a restrained gold for identity, and colour
