@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 /**
- * Landing-page help assistant — styled like a modern support bot.
+ * Landing-page help assistant — styled like a modern, premium support bot.
  *
  * Deliberately **scripted**, not AI-powered: zero cost, zero hallucination, and
  * no risk of a public bot handing out legal advice. Legal questions are steered
@@ -95,14 +95,26 @@ type Msg = { id: number; role: "user" | "bot"; node: ReactNode };
 
 export function LandingChat() {
   const [open, setOpen] = useState(false);
+  const [teaser, setTeaser] = useState(false);
   const [thread, setThread] = useState<Msg[]>([]);
   const [typing, setTyping] = useState(false);
   const [input, setInput] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
 
+  // Show a one-time "need help?" teaser a couple of seconds after load.
+  useEffect(() => {
+    const t = window.setTimeout(() => setTeaser(true), 2500);
+    return () => window.clearTimeout(t);
+  }, []);
+
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [thread, typing]);
+
+  function openChat() {
+    setTeaser(false);
+    setOpen(true);
+  }
 
   function respond(userNode: ReactNode, botNode: ReactNode) {
     const id = Date.now();
@@ -129,12 +141,22 @@ export function LandingChat() {
 
   return (
     <>
+      {/* Teaser bubble */}
+      {teaser && !open && (
+        <button
+          onClick={openChat}
+          className="fixed bottom-24 right-5 z-40 max-w-[15rem] animate-[msgin_0.3s_ease-out] rounded-2xl rounded-br-sm border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 text-left text-sm text-[var(--text)] shadow-[0_16px_40px_-16px_rgba(11,27,58,0.5)]"
+        >
+          👋 Questions about LexMind? <span className="text-[var(--brand-gold-ink)]">Ask me →</span>
+        </button>
+      )}
+
       {/* Launcher */}
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => (open ? setOpen(false) : openChat())}
         aria-label={open ? "Close help" : "Open help"}
-        className={`fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--brand-ink)] text-white shadow-[0_12px_32px_-8px_rgba(11,27,58,0.55)] transition hover:brightness-110 ${
-          open ? "" : "animate-[launcherpulse_2.4s_ease-out_infinite]"
+        className={`fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-[#12294f] to-[#0b1b3a] text-white shadow-[0_14px_36px_-8px_rgba(11,27,58,0.6)] transition-transform duration-200 hover:scale-105 active:scale-95 ${
+          open ? "" : "animate-[launcherpulse_2.6s_ease-out_infinite]"
         }`}
       >
         {open ? (
@@ -150,16 +172,20 @@ export function LandingChat() {
 
       {/* Panel */}
       {open && (
-        <div className="fixed bottom-24 right-5 z-40 flex max-h-[72vh] w-[min(92vw,23rem)] animate-[chatpop_0.18s_ease-out] flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[0_24px_64px_-20px_rgba(11,27,58,0.55)]">
-          {/* Header */}
-          <div className="flex items-center gap-3 bg-[var(--brand-ink)] px-4 py-3 text-white">
-            <BotAvatar size={38} />
-            <div className="flex-1">
-              <p className="font-serif text-base font-semibold leading-tight">LexMind Assistant</p>
-              <p className="flex items-center gap-1.5 text-xs text-white/70">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#37d19a]" /> Online · usually instant
-              </p>
+        <div className="fixed bottom-24 right-5 z-40 flex max-h-[74vh] w-[min(93vw,23.5rem)] animate-[chatpop_0.2s_ease-out] flex-col overflow-hidden rounded-[20px] border border-[var(--border)] bg-[var(--surface)] shadow-[0_28px_70px_-22px_rgba(11,27,58,0.6)]">
+          {/* Header — gradient with gold accent */}
+          <div className="relative bg-gradient-to-br from-[#12294f] to-[#0b1b3a] px-4 py-3.5 text-white">
+            <div className="flex items-center gap-3">
+              <span className="relative">
+                <BotAvatar size={40} ring />
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#0b1b3a] bg-[#37d19a]" />
+              </span>
+              <div className="flex-1">
+                <p className="font-serif text-base font-semibold leading-tight">LexMind Assistant</p>
+                <p className="text-xs text-white/65">Online · usually replies instantly</p>
+              </div>
             </div>
+            <span className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[var(--brand-gold)] to-transparent opacity-60" />
           </div>
 
           {/* Messages */}
@@ -173,7 +199,7 @@ export function LandingChat() {
                 <BotRow key={m.id}>{m.node}</BotRow>
               ) : (
                 <div key={m.id} className="animate-[msgin_0.2s_ease-out] text-right">
-                  <div className="inline-block max-w-[85%] rounded-2xl rounded-br-sm bg-[var(--brand-ink)] px-3 py-2 text-left text-white">
+                  <div className="inline-block max-w-[85%] rounded-2xl rounded-br-sm bg-gradient-to-br from-[#12294f] to-[#0b1b3a] px-3 py-2 text-left text-white shadow-sm">
                     {m.node}
                   </div>
                 </div>
@@ -196,38 +222,40 @@ export function LandingChat() {
             <div ref={endRef} />
           </div>
 
-          {/* Quick replies */}
+          {/* Quick replies + input */}
           <div className="border-t border-[var(--border)] bg-[var(--surface)] px-3 pt-3">
             <div className="flex flex-wrap gap-1.5">
               {FAQS.map((f) => (
                 <button
                   key={f.q}
                   onClick={() => pick(f)}
-                  className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1 text-xs text-[var(--text)] transition hover:border-[var(--ring)] hover:bg-[var(--surface-2)]"
+                  className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1 text-xs text-[var(--text)] transition hover:border-[var(--brand-gold)] hover:bg-[var(--surface-2)]"
                 >
                   {f.q}
                 </button>
               ))}
             </div>
 
-            {/* Input */}
-            <form onSubmit={sendCustom} className="mt-2.5 flex items-center gap-2 pb-3">
+            <form onSubmit={sendCustom} className="mt-2.5 flex items-center gap-2 pb-2">
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Type a question…"
-                className="input flex-1 py-2 text-sm"
+                className="flex-1 rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-sm text-[var(--text)] outline-none transition focus:border-[var(--ring)]"
               />
               <button
                 type="submit"
                 aria-label="Send"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[var(--brand-ink)] text-white transition hover:brightness-110"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#12294f] to-[#0b1b3a] text-white transition hover:scale-105 active:scale-95"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M22 2 11 13M22 2l-7 20-4-9-9-4z" />
                 </svg>
               </button>
             </form>
+            <p className="pb-2.5 text-center text-[10px] text-[var(--muted)]">
+              Scripted assistant · not legal advice
+            </p>
           </div>
         </div>
       )}
@@ -239,17 +267,19 @@ function BotRow({ children }: { children: ReactNode }) {
   return (
     <div className="flex animate-[msgin_0.2s_ease-out] items-end gap-2">
       <BotAvatar size={26} />
-      <div className="inline-block max-w-[85%] rounded-2xl rounded-bl-sm bg-[var(--surface-2)] px-3 py-2 text-[var(--text)]">
+      <div className="inline-block max-w-[85%] rounded-2xl rounded-bl-sm bg-[var(--surface)] px-3 py-2 text-[var(--text)] shadow-sm ring-1 ring-[var(--border)]">
         {children}
       </div>
     </div>
   );
 }
 
-function BotAvatar({ size = 28 }: { size?: number }) {
+function BotAvatar({ size = 28, ring = false }: { size?: number; ring?: boolean }) {
   return (
     <span
-      className="flex shrink-0 items-center justify-center rounded-full bg-[var(--brand-gold)]"
+      className={`flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#f1c16a] to-[var(--brand-gold)] ${
+        ring ? "ring-2 ring-white/20" : ""
+      }`}
       style={{ width: size, height: size }}
     >
       <svg width={size * 0.62} height={size * 0.62} viewBox="0 0 32 32" fill="none" aria-hidden>
