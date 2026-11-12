@@ -20,6 +20,36 @@ def mail_configured() -> bool:
     return bool(s.smtp_host and s.smtp_user and s.smtp_password)
 
 
+def smtp_diagnose() -> dict[str, object]:
+    """Connect + log in to SMTP (no email sent) and report the result. Surfaces
+    the exact provider error for debugging without ever exposing the password."""
+    s = get_settings()
+    if not mail_configured():
+        return {"configured": False, "ok": False, "error": "SMTP not configured"}
+    try:
+        with smtplib.SMTP(s.smtp_host, s.smtp_port, timeout=15) as server:
+            if s.smtp_tls:
+                server.starttls()
+            server.login(s.smtp_user, s.smtp_password)
+        return {
+            "configured": True,
+            "ok": True,
+            "error": None,
+            "host": s.smtp_host,
+            "port": s.smtp_port,
+            "user": s.smtp_user,
+        }
+    except Exception as exc:  # noqa: BLE001 — surface any provider error
+        return {
+            "configured": True,
+            "ok": False,
+            "error": f"{type(exc).__name__}: {exc}",
+            "host": s.smtp_host,
+            "port": s.smtp_port,
+            "user": s.smtp_user,
+        }
+
+
 def send_email(to: str, subject: str, body: str) -> bool:
     """Send a plain-text email. Returns True if sent, False if SMTP is not
     configured or the send failed (the error is logged, never raised)."""
