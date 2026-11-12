@@ -49,7 +49,7 @@ _PENDING = "Pending — insufficient information in the case documents; requires
 
 ANALYSIS_SYSTEM = (
     "You are LexMind's case analysis assistant for a law chamber in Pakistan. "
-    "Analyse the case using ONLY the CONTEXT blocks (the case's documents). "
+    "Analyse the case using ONLY the case's documents provided below. "
     "Produce a structured analysis as a JSON object whose keys are exactly: "
     + ", ".join(_KEYS)
     + ". Each value is the section's text.\n"

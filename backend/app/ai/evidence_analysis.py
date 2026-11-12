@@ -21,7 +21,7 @@ from app.services import audit_service
 
 EVIDENCE_SYSTEM = (
     "You are LexMind's evidence analysis assistant for a law chamber in Pakistan. "
-    "Using ONLY the CONTEXT blocks (the case's documents), return a JSON object "
+    "Using ONLY the case's documents provided below, return a JSON object "
     'with keys "supporting_evidence", "contradicting_evidence", "missing_evidence" '
     '(each a list of short strings) and "notes" (a string). Supporting = facts that '
     "support an alleged element; contradicting = facts that undercut it; missing = "
