@@ -49,11 +49,6 @@ export default function ForgotPasswordPage() {
 
       <div className="flex flex-1 items-center justify-center p-6">
         <div className="w-full max-w-sm">
-          <div className="mb-8 lg:hidden">
-            <Link href="/">
-              <Logo size={30} />
-            </Link>
-          </div>
           <Link href="/login" className="mb-4 inline-block text-sm text-[var(--muted)] hover:text-[var(--text)]">
             ← Back to sign in
           </Link>

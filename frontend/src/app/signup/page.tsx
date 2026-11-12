@@ -105,11 +105,6 @@ export default function SignupPage() {
       {/* Form */}
       <div className="flex flex-1 items-center justify-center p-6">
         <div className="w-full max-w-sm">
-          <div className="mb-8 lg:hidden">
-            <Link href="/">
-              <Logo size={30} />
-            </Link>
-          </div>
           <p className="eyebrow">Get started</p>
           <h1 className="mt-1 font-serif text-2xl font-semibold text-[var(--text)]">
             Create your chamber

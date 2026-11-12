@@ -72,9 +72,6 @@ export default function LoginPage() {
       {/* Form */}
       <div className="flex flex-1 items-center justify-center p-6">
         <div className="w-full max-w-sm">
-          <div className="mb-8 lg:hidden">
-            <Logo size={30} />
-          </div>
           <p className="eyebrow">Sign in</p>
           <h1 className="mt-1 font-serif text-2xl font-semibold text-[var(--text)]">
             Welcome back
