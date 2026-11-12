@@ -1,7 +1,23 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { Icon } from "@/components/icons";
 import { Card, PageHeader } from "@/components/ui";
+
+const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "support@lexmind.pk";
+
+const MODULE_ICONS: Record<string, string> = {
+  Intake: "intake",
+  Cases: "folder",
+  Clients: "users",
+  Documents: "doc",
+  Finance: "wallet",
+  "AI Assistant": "spark",
+  "Legal Library": "scale",
+  Tax: "receipt",
+  Reports: "chart",
+  "Users & Settings": "shield",
+};
 
 export default function HelpPage() {
   return (
@@ -37,7 +53,12 @@ export default function HelpPage() {
           {MODULES.map((m) => (
             <Card key={m.name}>
               <div className="flex items-center justify-between">
-                <h3 className="font-serif text-base font-semibold text-[var(--text)]">{m.name}</h3>
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-[var(--surface-2)] text-[var(--brand-gold-ink)]">
+                    <Icon name={MODULE_ICONS[m.name] ?? "folder"} className="h-[18px] w-[18px]" />
+                  </span>
+                  <h3 className="font-serif text-base font-semibold text-[var(--text)]">{m.name}</h3>
+                </div>
                 <Link href={m.href} className="text-xs font-medium text-[var(--brand-gold-ink)] hover:underline">
                   Open →
                 </Link>
@@ -89,6 +110,23 @@ export default function HelpPage() {
           <li>• Your chamber&apos;s data is isolated from every other chamber at the database level, and CNICs are encrypted at rest.</li>
           <li>• Every sensitive action is recorded in an audit trail.</li>
         </ul>
+      </Card>
+
+      {/* Contact / support */}
+      <Card>
+        <p className="eyebrow mb-3">Need help or found an issue?</p>
+        <p className="text-sm text-[var(--muted)]">
+          If something isn&apos;t working, or you have a question this guide doesn&apos;t answer, reach
+          our team — we usually reply within one business day.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <a href={`mailto:${SUPPORT_EMAIL}?subject=LexMind%20support%20request`} className="btn btn-primary">
+            <Icon name="doc" className="h-4 w-4" /> Email support
+          </a>
+          <a href={`mailto:${SUPPORT_EMAIL}?subject=LexMind%20issue%20report`} className="btn btn-ghost">
+            <Icon name="alert" className="h-4 w-4" /> Report an issue
+          </a>
+        </div>
       </Card>
 
       <p className="text-center text-xs text-[var(--muted)]">

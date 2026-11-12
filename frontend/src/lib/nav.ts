@@ -23,6 +23,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Tax", href: "/dashboard/tax", permission: "ai:research:run", icon: "receipt", group: "Intelligence" },
   { label: "Reports", href: "/dashboard/reports", permission: "analytics:view", icon: "chart", group: "Intelligence" },
   { label: "Users", href: "/dashboard/users", permission: "admin:users:manage", icon: "shield", group: "Administration" },
+  { label: "Billing", href: "/dashboard/billing", permission: "admin:org:manage", icon: "wallet", group: "Administration" },
   { label: "Settings", href: "/dashboard/settings", permission: "admin:org:manage", icon: "gear", group: "Administration" },
   { label: "Help & Guide", href: "/dashboard/help", permission: null, icon: "help", group: "Administration" },
 ];
