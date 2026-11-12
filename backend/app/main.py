@@ -64,15 +64,6 @@ def create_app() -> FastAPI:
             "mail_configured": mail_configured(),
         }
 
-    @app.get(f"{settings.api_v1_prefix}/health/smtp", tags=["health"])
-    def smtp_check() -> dict[str, object]:
-        """Temporary email diagnostic — reports the active backend (Resend or
-        SMTP) and whether its provider is reachable (no email sent, no secret
-        exposed)."""
-        from app.core.email import mail_diagnose
-
-        return mail_diagnose()
-
     app.include_router(api_router, prefix=settings.api_v1_prefix)
 
     return app
