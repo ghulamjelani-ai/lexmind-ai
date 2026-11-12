@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { LandingChat } from "@/components/landing-chat";
 import { Logo } from "@/components/logo";
 
 export const metadata = {
@@ -22,6 +23,7 @@ export default function LandingPage() {
         <FinalCta />
       </main>
       <SiteFooter />
+      <LandingChat />
     </div>
   );
 }
