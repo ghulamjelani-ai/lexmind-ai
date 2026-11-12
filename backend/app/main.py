@@ -4,8 +4,9 @@ Phase 0: minimal app with health checks and CORS. Modules (auth, cases,
 clients, documents, AI, …) are registered on the v1 router as they are built.
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.responses import Response
 
 from app import __version__
 from app.api.v1.router import api_router
@@ -29,6 +30,23 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    @app.middleware("http")
+    async def security_headers(request: Request, call_next) -> Response:  # type: ignore[no-untyped-def]
+        """Conservative security response headers. No strict CSP — it would break
+        the Swagger UI at /docs; this is a JSON API, not an HTML app."""
+        response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault(
+            "Permissions-Policy", "geolocation=(), microphone=(), camera=()"
+        )
+        if settings.environment == "production":
+            response.headers.setdefault(
+                "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+            )
+        return response
 
     @app.get("/health", tags=["health"])
     def health() -> dict[str, str]:

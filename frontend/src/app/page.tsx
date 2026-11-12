@@ -344,10 +344,11 @@ function SiteFooter() {
               lawyer-verifiable.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-10 text-sm sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-10 text-sm sm:grid-cols-4">
             <FooterCol title="Product" links={[["Features", "#features"], ["How it works", "#how"], ["Pricing", "#pricing"]]} />
             <FooterCol title="Account" links={[["Start free", "/signup"], ["Sign in", "/login"]]} />
             <FooterCol title="Trust" links={[["Security", "#security"]]} />
+            <FooterCol title="Legal" links={[["Terms", "/terms"], ["Privacy", "/privacy"]]} />
           </div>
         </div>
         <div className="mt-10 border-t border-[var(--border)] pt-6 text-xs leading-relaxed text-[var(--muted)]">

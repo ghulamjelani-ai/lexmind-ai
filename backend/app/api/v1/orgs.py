@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_tenant_db
+from app.core.ratelimit import rate_limit
 from app.db.session import get_db
 from app.models.organization import Organization
 from app.models.user import User
@@ -13,7 +14,12 @@ from app.services.org_service import ProvisioningError, provision_organization
 router = APIRouter(prefix="/orgs", tags=["organizations"])
 
 
-@router.post("/register", response_model=OrgOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=OrgOut,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit("register", 5, 3600))],
+)
 def register_org(body: OrgRegisterRequest, db: Session = Depends(get_db)) -> Organization:
     """Bootstrap a new chamber with its owner account and seeded system roles.
 

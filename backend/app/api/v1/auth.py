@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_auth_context, get_current_user, get_tenant_db
 from app.core.config import get_settings
+from app.core.ratelimit import rate_limit
 from app.core.rbac import AuthContext
 from app.db.session import get_db
 from app.models.user import User
@@ -41,7 +42,11 @@ def _set_session_cookie(response: Response, token: str) -> None:
     )
 
 
-@router.post("/login", response_model=MeOut)
+@router.post(
+    "/login",
+    response_model=MeOut,
+    dependencies=[Depends(rate_limit("login", 10, 60))],
+)
 def login(
     body: LoginRequest,
     request: Request,
@@ -168,7 +173,11 @@ def mfa_disable(
 
 
 # --- Password reset ----------------------------------------------------------
-@router.post("/password-reset/request", response_model=MessageOut)
+@router.post(
+    "/password-reset/request",
+    response_model=MessageOut,
+    dependencies=[Depends(rate_limit("pwreset", 5, 300))],
+)
 def password_reset_request(
     body: PasswordResetRequestIn, db: Session = Depends(get_db)
 ) -> MessageOut:
@@ -183,7 +192,11 @@ def password_reset_request(
     return MessageOut(message="If the account exists, a reset link has been sent.")
 
 
-@router.post("/password-reset/confirm", response_model=MessageOut)
+@router.post(
+    "/password-reset/confirm",
+    response_model=MessageOut,
+    dependencies=[Depends(rate_limit("pwreset_confirm", 10, 300))],
+)
 def password_reset_confirm(
     body: PasswordResetConfirmIn, db: Session = Depends(get_db)
 ) -> MessageOut:
