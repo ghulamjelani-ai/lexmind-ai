@@ -54,9 +54,15 @@ def create_app() -> FastAPI:
         return {"status": "ok", "service": settings.app_name, "version": __version__}
 
     @app.get(f"{settings.api_v1_prefix}/health", tags=["health"])
-    def health_v1() -> dict[str, str]:
+    def health_v1() -> dict[str, object]:
         """Versioned health check; module routers mount under this prefix."""
-        return {"status": "ok", "environment": settings.environment}
+        from app.core.email import mail_configured
+
+        return {
+            "status": "ok",
+            "environment": settings.environment,
+            "mail_configured": mail_configured(),
+        }
 
     app.include_router(api_router, prefix=settings.api_v1_prefix)
 
