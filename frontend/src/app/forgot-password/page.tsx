@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { AuthShell } from "@/components/auth-shell";
 import { Logo } from "@/components/logo";
 import { api, ApiError } from "@/lib/api";
 
@@ -29,6 +30,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
+    <AuthShell rightLink={{ href: "/login", label: "Sign in" }}>
     <main className="flex flex-1 items-stretch">
       <div className="hidden w-1/2 flex-col justify-between bg-[var(--brand-ink)] p-12 lg:flex">
         <Link href="/">
@@ -94,6 +96,7 @@ export default function ForgotPasswordPage() {
         </div>
       </div>
     </main>
+    </AuthShell>
   );
 }
 

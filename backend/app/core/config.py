@@ -103,6 +103,16 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_from: str = ""
     smtp_tls: bool = True
+
+    # Email (Resend HTTP API). Preferred on hosts that block outbound SMTP ports
+    # (e.g. Railway, Render, Fly): Resend sends over HTTPS/443, which is never
+    # blocked. When resend_api_key is set it takes priority over SMTP. Get a free
+    # key at resend.com. The "from" address must be on a Resend-verified domain;
+    # without one, Resend only delivers to your own account email using the
+    # default onboarding@resend.dev sender.
+    resend_api_key: str = ""
+    resend_from: str = "LexMind <onboarding@resend.dev>"
+
     # Public base URL of the web app, used to build links inside emails.
     app_url: str = "http://localhost:3000"
 

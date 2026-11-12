@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { AuthShell } from "@/components/auth-shell";
 import { Logo } from "@/components/logo";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
@@ -46,6 +47,7 @@ export default function LoginPage() {
   }
 
   return (
+    <AuthShell rightLink={{ href: "/signup", label: "Create a chamber" }}>
     <main className="flex flex-1 items-stretch">
       {/* Brand panel */}
       <div className="hidden w-1/2 flex-col justify-between bg-[var(--brand-ink)] p-12 lg:flex">
@@ -105,6 +107,7 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
+    </AuthShell>
   );
 }
 

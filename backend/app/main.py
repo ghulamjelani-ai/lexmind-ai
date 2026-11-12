@@ -66,11 +66,12 @@ def create_app() -> FastAPI:
 
     @app.get(f"{settings.api_v1_prefix}/health/smtp", tags=["health"])
     def smtp_check() -> dict[str, object]:
-        """Temporary SMTP diagnostic — connects + logs in and reports the exact
-        provider error (no email sent, password never exposed)."""
-        from app.core.email import smtp_diagnose
+        """Temporary email diagnostic — reports the active backend (Resend or
+        SMTP) and whether its provider is reachable (no email sent, no secret
+        exposed)."""
+        from app.core.email import mail_diagnose
 
-        return smtp_diagnose()
+        return mail_diagnose()
 
     app.include_router(api_router, prefix=settings.api_v1_prefix)
 
