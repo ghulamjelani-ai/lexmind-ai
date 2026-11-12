@@ -109,10 +109,11 @@ function renderBlock(b: Block, key: number): ReactNode {
   }
 }
 
-// Inline formatting: **bold**, `code`, _italic_.
+// Inline formatting: **bold**, *italic*, `code`, _italic_.
 function inline(text: string): ReactNode[] {
   const nodes: ReactNode[] = [];
-  const re = /(\*\*([^*]+)\*\*|`([^`]+)`|_([^_]+)_)/g;
+  // Bold (**) is matched before single-* italic so it wins; code and _italic_ too.
+  const re = /(\*\*([^*]+)\*\*|\*([^*\n]+)\*|`([^`]+)`|_([^_]+)_)/g;
   let last = 0;
   let k = 0;
   let m: RegExpExecArray | null;
@@ -121,13 +122,15 @@ function inline(text: string): ReactNode[] {
     if (m[2] !== undefined) {
       nodes.push(<strong key={k++}>{m[2]}</strong>);
     } else if (m[3] !== undefined) {
+      nodes.push(<em key={k++}>{m[3]}</em>);
+    } else if (m[4] !== undefined) {
       nodes.push(
         <code key={k++} className="rounded bg-[var(--surface-2)] px-1 text-[0.85em]">
-          {m[3]}
+          {m[4]}
         </code>,
       );
-    } else if (m[4] !== undefined) {
-      nodes.push(<em key={k++}>{m[4]}</em>);
+    } else if (m[5] !== undefined) {
+      nodes.push(<em key={k++}>{m[5]}</em>);
     }
     last = m.index + m[0].length;
   }

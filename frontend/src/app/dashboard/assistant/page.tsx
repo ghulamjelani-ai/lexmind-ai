@@ -56,10 +56,14 @@ export default function AssistantPage() {
     }
   }
 
-  async function send(e: React.FormEvent) {
+  function send(e: React.FormEvent) {
     e.preventDefault();
-    if (!activeId || !input.trim()) return;
-    const q = input.trim();
+    void ask(input);
+  }
+
+  async function ask(raw: string) {
+    const q = raw.trim();
+    if (!activeId || !q || sending) return;
     setInput("");
     setSending(true);
     setError(null);
@@ -92,6 +96,9 @@ export default function AssistantPage() {
       setSending(false);
     }
   }
+
+  const activeConv = conversations.find((c) => c.id === activeId);
+  const suggestions = activeConv?.mode === "case" ? CASE_SUGGESTIONS : GENERAL_SUGGESTIONS;
 
   return (
     <div>
@@ -169,7 +176,23 @@ export default function AssistantPage() {
             {!activeId ? (
               <p className="text-sm text-[var(--muted)]">Start or pick a conversation to begin.</p>
             ) : messages.length === 0 ? (
-              <p className="text-sm text-[var(--muted)]">Ask your first question below.</p>
+              <div>
+                <p className="mb-3 text-sm text-[var(--muted)]">
+                  Ask your first question, or try one of these:
+                </p>
+                <div className="flex flex-col gap-2">
+                  {suggestions.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => void ask(s)}
+                      disabled={sending}
+                      className="rounded-[10px] border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 text-left text-sm text-[var(--text)] transition hover:border-[var(--ring)] hover:bg-[var(--surface-2)] disabled:opacity-60"
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ) : (
               messages.map((m) => (
                 <div key={m.id} className={m.role === "user" ? "text-right" : ""}>
@@ -219,3 +242,17 @@ export default function AssistantPage() {
     </div>
   );
 }
+
+const GENERAL_SUGGESTIONS = [
+  "What are the conditions for granting bail in non-bailable offences under Pakistani law?",
+  "Explain the difference between a filer and a non-filer under Pakistani tax law.",
+  "What is the procedure for filing a suit for recovery of possession of property?",
+  "Summarise the key stages of a criminal trial in Pakistan.",
+];
+
+const CASE_SUGGESTIONS = [
+  "Summarise the key facts and legal issues in this case.",
+  "What are the strongest arguments available to my client?",
+  "What evidence is missing or needs follow-up?",
+  "Draft a brief chronology of events from the documents.",
+];
