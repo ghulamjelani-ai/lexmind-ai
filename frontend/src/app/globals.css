@@ -198,3 +198,22 @@ body {
 
   .dot { height: 0.5rem; width: 0.5rem; border-radius: 999px; }
 }
+
+/* Landing chat assistant animations */
+@keyframes chatpop {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes msgin {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes typingdot {
+  0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+@keyframes launcherpulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand-gold) 55%, transparent); }
+  70% { box-shadow: 0 0 0 12px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
