@@ -5,11 +5,13 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.core.validators import Phone
+
 
 class LeadCreate(BaseModel):
     full_name: str = Field(min_length=1, max_length=255)
     email: str | None = Field(default=None, max_length=320)
-    phone: str | None = Field(default=None, max_length=50)
+    phone: Phone = Field(default=None, max_length=50)
     opposing_party: str | None = Field(default=None, max_length=255)
     matter_type: str | None = Field(default=None, max_length=60)
     description: str | None = Field(default=None, max_length=4000)

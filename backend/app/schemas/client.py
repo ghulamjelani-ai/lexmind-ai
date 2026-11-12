@@ -5,21 +5,23 @@ from datetime import datetime
 
 from pydantic import BaseModel, EmailStr, Field
 
+from app.core.validators import Cnic, OptionalEmail, Phone
+
 
 class ClientCreate(BaseModel):
     full_name: str = Field(min_length=1, max_length=255)
-    cnic: str | None = Field(default=None, max_length=32)
-    email: EmailStr | None = None
-    phone: str | None = Field(default=None, max_length=50)
+    cnic: Cnic = Field(default=None, max_length=32)
+    email: OptionalEmail = None
+    phone: Phone = Field(default=None, max_length=50)
     address: str | None = Field(default=None, max_length=512)
     assigned_lawyer_id: uuid.UUID | None = None
 
 
 class ClientUpdate(BaseModel):
     full_name: str | None = Field(default=None, min_length=1, max_length=255)
-    cnic: str | None = Field(default=None, max_length=32)
-    email: EmailStr | None = None
-    phone: str | None = Field(default=None, max_length=50)
+    cnic: Cnic = Field(default=None, max_length=32)
+    email: OptionalEmail = None
+    phone: Phone = Field(default=None, max_length=50)
     address: str | None = Field(default=None, max_length=512)
     assigned_lawyer_id: uuid.UUID | None = None
 

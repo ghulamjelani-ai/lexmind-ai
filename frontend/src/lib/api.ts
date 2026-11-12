@@ -62,7 +62,15 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     let detail = res.statusText;
     try {
       const body = await res.json();
-      if (typeof body?.detail === "string") detail = body.detail;
+      if (typeof body?.detail === "string") {
+        detail = body.detail;
+      } else if (Array.isArray(body?.detail) && body.detail.length > 0) {
+        // FastAPI/Pydantic validation errors come as a list; surface the first
+        // message (stripping Pydantic's "Value error, " prefix) so the user sees
+        // something actionable instead of "Unprocessable Entity".
+        const first = body.detail[0];
+        if (first?.msg) detail = String(first.msg).replace(/^Value error,\s*/, "");
+      }
     } catch {
       /* ignore non-JSON error bodies */
     }

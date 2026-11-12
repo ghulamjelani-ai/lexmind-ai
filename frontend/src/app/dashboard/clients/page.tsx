@@ -29,7 +29,25 @@ export default function ClientsPage() {
 
   async function create(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.full_name.trim()) return;
+    if (!form.full_name.trim()) {
+      setError("Full name is required.");
+      return;
+    }
+    const cnic = form.cnic.trim();
+    if (cnic && cnic.replace(/\D/g, "").length !== 13) {
+      setError("CNIC must be 13 digits (e.g. 35202-1234567-1).");
+      return;
+    }
+    const phone = form.phone.trim();
+    if (phone && !/^\+?\d{7,15}$/.test(phone.replace(/[\s\-().]/g, ""))) {
+      setError("Enter a valid phone number (7–15 digits, optional leading +).");
+      return;
+    }
+    const email = form.email.trim();
+    if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      setError("Enter a valid email address.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {

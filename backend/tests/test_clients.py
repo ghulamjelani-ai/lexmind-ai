@@ -28,6 +28,32 @@ def test_client_crud(client, db):
     assert client.get(f"/api/v1/clients/{cid}").status_code == 404
 
 
+def test_client_input_validation(client, db):
+    _auth_owner(client, db, "cl-valid")
+
+    # CNIC must be 13 digits.
+    assert client.post(
+        "/api/v1/clients", json={"full_name": "Bad CNIC", "cnic": "123"}
+    ).status_code == 422
+    # A valid CNIC with dashes is accepted (formatting preserved).
+    assert client.post(
+        "/api/v1/clients", json={"full_name": "Good CNIC", "cnic": "35202-1234567-1"}
+    ).status_code == 201
+
+    # Garbage phone is rejected; a sensible one is accepted.
+    assert client.post(
+        "/api/v1/clients", json={"full_name": "Bad Phone", "phone": "abc"}
+    ).status_code == 422
+    assert client.post(
+        "/api/v1/clients", json={"full_name": "Good Phone", "phone": "+92 300 1234567"}
+    ).status_code == 201
+
+    # Empty optional strings are treated as omitted, not invalid.
+    assert client.post(
+        "/api/v1/clients", json={"full_name": "No Email", "email": "", "cnic": ""}
+    ).status_code == 201
+
+
 def test_conflict_check(client, db):
     _auth_owner(client, db, "cl-conf")
     client.post("/api/v1/clients", json={"full_name": "Imran Ahmed"})
