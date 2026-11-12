@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { AuthShell } from "@/components/auth-shell";
 import { Logo } from "@/components/logo";
+import { useToast } from "@/components/toast";
 import { api, ApiError } from "@/lib/api";
 
 export default function ForgotPasswordPage() {
@@ -13,6 +14,7 @@ export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const toast = useToast();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -21,9 +23,15 @@ export default function ForgotPasswordPage() {
     try {
       await api.passwordResetRequest(orgSlug.trim(), email.trim());
       setSent(true);
+      toast.success("Reset link sent", "Check your email — the link expires in 60 minutes.");
     } catch (err) {
-      if (err instanceof ApiError) setError(err.message);
-      else setError("Could not reach the server. Please try again.");
+      if (err instanceof ApiError) {
+        setError(err.message);
+        toast.error("Couldn't send link", err.message);
+      } else {
+        setError("Could not reach the server. Please try again.");
+        toast.error("Network error", "Could not reach the server. Please try again.");
+      }
     } finally {
       setSubmitting(false);
     }

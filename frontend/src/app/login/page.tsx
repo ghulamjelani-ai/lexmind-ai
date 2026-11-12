@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import { AuthShell } from "@/components/auth-shell";
 import { Logo } from "@/components/logo";
+import { useToast } from "@/components/toast";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 
@@ -20,6 +21,7 @@ export default function LoginPage() {
   const [mfaRequired, setMfaRequired] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     if (!loading && me) router.replace("/dashboard");
@@ -31,15 +33,19 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await login(orgSlug.trim(), email.trim(), password, mfaRequired ? mfaCode.trim() : undefined);
+      toast.success("Signed in", "Welcome back to your chamber workspace.");
       router.replace("/dashboard");
     } catch (err) {
       if (err instanceof ApiError && /mfa/i.test(err.message)) {
         setMfaRequired(true);
         setError("Enter your authenticator code to continue.");
+        toast.info("Verification needed", "Enter your authenticator code to continue.");
       } else if (err instanceof ApiError) {
         setError(err.message);
+        toast.error("Sign in failed", err.message);
       } else {
         setError("Could not reach the server. Is the API running?");
+        toast.error("Network error", "Could not reach the server. Is the API running?");
       }
     } finally {
       setSubmitting(false);

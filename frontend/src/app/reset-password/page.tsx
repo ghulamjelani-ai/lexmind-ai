@@ -6,6 +6,7 @@ import { Suspense, useState } from "react";
 
 import { AuthShell } from "@/components/auth-shell";
 import { Logo } from "@/components/logo";
+import { useToast } from "@/components/toast";
 import { api, ApiError } from "@/lib/api";
 
 export default function ResetPasswordPage() {
@@ -27,6 +28,7 @@ function ResetForm() {
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const toast = useToast();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,10 +45,16 @@ function ResetForm() {
     try {
       await api.passwordResetConfirm(token, password);
       setDone(true);
+      toast.success("Password updated", "You can now sign in with your new password.");
       setTimeout(() => router.replace("/login"), 1800);
     } catch (err) {
-      if (err instanceof ApiError) setError(err.message);
-      else setError("Could not reach the server. Please try again.");
+      if (err instanceof ApiError) {
+        setError(err.message);
+        toast.error("Couldn't update password", err.message);
+      } else {
+        setError("Could not reach the server. Please try again.");
+        toast.error("Network error", "Could not reach the server. Please try again.");
+      }
     } finally {
       setSubmitting(false);
     }
