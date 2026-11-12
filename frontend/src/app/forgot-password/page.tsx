@@ -52,6 +52,9 @@ export default function ForgotPasswordPage() {
               <Logo size={30} />
             </Link>
           </div>
+          <Link href="/login" className="mb-4 inline-block text-sm text-[var(--muted)] hover:text-[var(--text)]">
+            ← Back to sign in
+          </Link>
           <p className="eyebrow">Forgot password</p>
           <h1 className="mt-1 font-serif text-2xl font-semibold text-[var(--text)]">Reset password</h1>
 

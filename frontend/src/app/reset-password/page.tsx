@@ -70,6 +70,9 @@ function ResetForm() {
               <Logo size={30} />
             </Link>
           </div>
+          <Link href="/login" className="mb-4 inline-block text-sm text-[var(--muted)] hover:text-[var(--text)]">
+            ← Back to sign in
+          </Link>
           <p className="eyebrow">Reset password</p>
           <h1 className="mt-1 font-serif text-2xl font-semibold text-[var(--text)]">
             Choose a new password
@@ -115,9 +118,6 @@ function ResetForm() {
                     {reveal ? "🙈" : "👁"}
                   </button>
                 </div>
-                <span className="mt-1 block text-xs text-[var(--muted)]">
-                  At least 8 characters, including a letter and a number.
-                </span>
               </label>
               <label className="block">
                 <span className="mb-1 block text-sm font-medium text-[var(--text)]">Confirm password</span>
@@ -130,6 +130,14 @@ function ResetForm() {
                   className="input"
                 />
               </label>
+
+              <ul className="space-y-1 text-xs">
+                <Rule ok={password.length >= 8}>At least 8 characters</Rule>
+                <Rule ok={/[a-zA-Z]/.test(password)}>Contains a letter</Rule>
+                <Rule ok={/[0-9]/.test(password)}>Contains a number</Rule>
+                <Rule ok={confirm.length > 0 && password === confirm}>Passwords match</Rule>
+              </ul>
+
               {error && <p className="badge badge-bad w-full justify-start px-3 py-2 font-normal">{error}</p>}
               <button type="submit" disabled={submitting} className="btn btn-primary w-full py-2.5">
                 {submitting ? "Updating…" : "Update password"}
@@ -139,5 +147,16 @@ function ResetForm() {
         </div>
       </div>
     </main>
+  );
+}
+
+function Rule({ ok, children }: { ok: boolean; children: React.ReactNode }) {
+  return (
+    <li className={`flex items-center gap-2 ${ok ? "text-[var(--ok)]" : "text-[var(--muted)]"}`}>
+      <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${ok ? "bg-[var(--ok-bg)]" : "bg-[var(--surface-2)]"}`}>
+        {ok ? "✓" : "•"}
+      </span>
+      {children}
+    </li>
   );
 }
