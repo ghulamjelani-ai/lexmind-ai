@@ -8,6 +8,7 @@
 import type {
   AiChatMessage,
   AutoVerifyResult,
+  CalendarItem,
   Case,
   CaseAnalysis,
   Client,
@@ -223,6 +224,9 @@ export const api = {
   reportSummary: () => request<CaseSummary>("/reports/summary"),
 
   casesCsvUrl: () => `${V1}/reports/cases.csv`,
+
+  calendar: (fromISO: string, toISO: string) =>
+    request<CalendarItem[]>(`/calendar?from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`),
 
   // --- tasks -----------------------------------------------------------------
   listTasks: (params: { status?: string; mine?: boolean; case_id?: string; limit?: number } = {}) => {

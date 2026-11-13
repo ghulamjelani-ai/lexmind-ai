@@ -383,3 +383,12 @@ export interface Task {
   created_by: string | null;
   created_at: string;
 }
+
+export interface CalendarItem {
+  kind: "hearing" | "task";
+  id: string;
+  case_id: string | null;
+  title: string;
+  at: string;
+  status: string;
+}

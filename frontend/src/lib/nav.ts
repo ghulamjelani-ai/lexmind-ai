@@ -16,6 +16,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Intake", href: "/dashboard/intake", permission: "cases:read", icon: "intake", group: "Workspace" },
   { label: "Cases", href: "/dashboard/cases", permission: "cases:read", icon: "folder", group: "Workspace" },
   { label: "Tasks", href: "/dashboard/tasks", permission: "tasks:create", icon: "check", group: "Workspace" },
+  { label: "Court Diary", href: "/dashboard/diary", permission: "cases:read", icon: "clock", group: "Workspace" },
   { label: "Clients", href: "/dashboard/clients", permission: "clients:manage", icon: "users", group: "Workspace" },
   { label: "Documents", href: "/dashboard/documents", permission: "documents:read", icon: "doc", group: "Workspace" },
   { label: "Finance", href: "/dashboard/finance", permission: "clients:manage", icon: "wallet", group: "Workspace" },
