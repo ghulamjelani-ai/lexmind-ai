@@ -133,6 +133,22 @@ export const api = {
 
   myOrg: () => request<Organization>("/orgs/me"),
 
+  subscription: () =>
+    request<{
+      plan: string;
+      plan_name: string;
+      price_pkr: number;
+      status: "trialing" | "active" | "past_due" | "restricted";
+      restricted: boolean;
+      past_due: boolean;
+      trialing: boolean;
+      days_left: number | null;
+      trial_ends_at: string | null;
+      current_period_end: string | null;
+      limits: Record<string, number>;
+      features: string[];
+    }>("/billing/subscription"),
+
   listUsers: () => request<User[]>("/users"),
 
   createUser: (input: {

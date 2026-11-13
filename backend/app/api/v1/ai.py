@@ -9,7 +9,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.ai import gateway, retrieval
-from app.api.deps import get_tenant_db, require
+from app.api.deps import get_tenant_db, require, require_not_restricted
 from app.core.rbac import AuthContext
 from app.models.knowledge import KbChunk
 from app.schemas.ai import (
@@ -82,7 +82,10 @@ def _sse(event: dict) -> str:
     return f"data: {json.dumps(event)}\n\n"
 
 
-@router.post("/conversations/{conversation_id}/ask/stream")
+@router.post(
+    "/conversations/{conversation_id}/ask/stream",
+    dependencies=[Depends(require_not_restricted)],
+)
 def ask_stream(
     conversation_id: uuid.UUID,
     body: AskRequest,

@@ -5,7 +5,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_tenant_db, require
+from app.api.deps import get_tenant_db, require, require_not_restricted
 from app.core.rbac import AuthContext
 from app.schemas.client import (
     ClientCreate,
@@ -19,7 +19,12 @@ from app.services import client_service
 router = APIRouter(prefix="/clients", tags=["clients"])
 
 
-@router.post("", response_model=ClientOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=ClientOut,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_not_restricted)],
+)
 def create_client(
     body: ClientCreate,
     db: Session = Depends(get_tenant_db),

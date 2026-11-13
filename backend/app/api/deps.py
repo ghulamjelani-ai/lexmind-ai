@@ -25,8 +25,9 @@ from app.db.session import (
     reset_current_org,
     set_current_org,
 )
+from app.models.organization import Organization
 from app.models.user import User
-from app.services import audit_service, auth_service
+from app.services import audit_service, auth_service, subscription_service
 from app.services.rbac_service import build_auth_context
 
 __all__ = [
@@ -105,3 +106,20 @@ def require(permission_code: str) -> Callable[..., AuthContext]:
         return ctx
 
     return dependency
+
+
+def require_not_restricted(
+    db: Session = Depends(get_tenant_db),
+    ctx: AuthContext = Depends(get_auth_context),
+) -> AuthContext:
+    """Block paid write operations when the subscription is restricted (grace
+    period elapsed). Reads and billing stay available so data is never lost and
+    the customer can always pay to restore access."""
+    org = db.get(Organization, ctx.organization_id)
+    if org is not None and subscription_service.is_restricted(org):
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Your subscription is past due. Please renew to continue. "
+            "Your data remains available in read-only mode.",
+        )
+    return ctx

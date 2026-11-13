@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_tenant_db, require
+from app.api.deps import get_tenant_db, require, require_not_restricted
 from app.core.rbac import AuthContext
 from app.models.case import Case
 from app.schemas.case import (
@@ -54,7 +54,12 @@ def _load_case(db: Session, ctx: AuthContext, case_id: uuid.UUID, action: str) -
     return case
 
 
-@router.post("", response_model=CaseOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=CaseOut,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_not_restricted)],
+)
 def create_case(
     body: CaseCreate,
     db: Session = Depends(get_tenant_db),

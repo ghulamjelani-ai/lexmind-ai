@@ -7,7 +7,7 @@ from fastapi.responses import Response
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_tenant_db, require
+from app.api.deps import get_tenant_db, require, require_not_restricted
 from app.core.config import get_settings
 from app.core.rbac import AuthContext
 from app.models.case import Case
@@ -46,7 +46,12 @@ async def _read_upload(file: UploadFile) -> bytes:
     return data
 
 
-@router.post("", response_model=DocumentOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=DocumentOut,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_not_restricted)],
+)
 async def upload_document(
     file: UploadFile = File(...),
     title: str = Form(...),

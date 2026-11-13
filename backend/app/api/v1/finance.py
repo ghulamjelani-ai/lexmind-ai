@@ -5,7 +5,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_tenant_db, require
+from app.api.deps import get_tenant_db, require, require_not_restricted
 from app.core.rbac import AuthContext
 from app.models.finance import Invoice
 from app.schemas.finance import (
@@ -80,7 +80,12 @@ def summary(
 
 
 # --- invoices ----------------------------------------------------------------
-@router.post("/invoices", response_model=InvoiceDetailOut, status_code=201)
+@router.post(
+    "/invoices",
+    response_model=InvoiceDetailOut,
+    status_code=201,
+    dependencies=[Depends(require_not_restricted)],
+)
 def create_invoice(
     body: InvoiceCreate,
     db: Session = Depends(get_tenant_db),

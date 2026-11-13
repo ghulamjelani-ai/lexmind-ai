@@ -9,6 +9,7 @@ from app.core.rbac import OWNER
 from app.core.security import hash_password
 from app.models.organization import Organization
 from app.models.user import User
+from app.services import subscription_service
 from app.services.rbac_service import assign_role, ensure_system_roles
 
 
@@ -32,6 +33,9 @@ def provision_organization(
     org = Organization(name=org_name, slug=org_slug)
     db.add(org)
     db.flush()
+
+    # Start a free trial from creation (Chamber-tier features for TRIAL_DAYS).
+    subscription_service.start_trial_if_absent(db, org)
 
     roles = ensure_system_roles(db, org.id)
 
