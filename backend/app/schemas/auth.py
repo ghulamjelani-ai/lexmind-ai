@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -105,6 +106,10 @@ class UserCreateRequest(BaseModel):
     password: str = Field(min_length=8, max_length=256)
     role: str = Field(min_length=1, max_length=100)
     is_client: bool = False
+
+
+class UserStatusUpdateIn(BaseModel):
+    status: Literal["active", "disabled"]
 
 
 class RoleOut(BaseModel):

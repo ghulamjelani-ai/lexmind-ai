@@ -143,6 +143,9 @@ export const api = {
     is_client?: boolean;
   }) => request<User>("/users", { method: "POST", body: JSON.stringify(input) }),
 
+  setUserStatus: (id: string, status: "active" | "disabled") =>
+    request<User>(`/users/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }),
+
   listRoles: () => request<Role[]>("/roles"),
 
   listInvites: () => request<Invite[]>("/invites"),

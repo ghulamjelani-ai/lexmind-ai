@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/auth-context";
 import type { Role, User } from "@/types";
 
 export default function UsersPage() {
-  const { can } = useAuth();
+  const { can, me } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,6 +64,19 @@ export default function UsersPage() {
 
   const canManage = can("admin:users:manage");
 
+  async function toggleStatus(u: User) {
+    const next = u.status === "active" ? "disabled" : "active";
+    const verb = next === "disabled" ? "Deactivate" : "Reactivate";
+    if (!window.confirm(`${verb} ${u.full_name}? ${next === "disabled" ? "They will no longer be able to sign in." : ""}`)) return;
+    try {
+      await api.setUserStatus(u.id, next);
+      await load();
+      toast.success(next === "disabled" ? "User deactivated" : "User reactivated", `${u.full_name} is now ${next}.`);
+    } catch (err) {
+      toast.error("Couldn't update user", err instanceof ApiError ? err.message : "Please try again.");
+    }
+  }
+
   return (
     <div>
       <PageHeader eyebrow="Administration" title="Users" subtitle="People in your chamber and their roles." />
@@ -102,18 +115,19 @@ export default function UsersPage() {
               <Th>Email</Th>
               <Th>Type</Th>
               <Th>Status</Th>
+              {canManage && <Th>Actions</Th>}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-sm text-[var(--muted)]">
+                <td colSpan={canManage ? 5 : 4} className="px-4 py-8 text-center text-sm text-[var(--muted)]">
                   Loading…
                 </td>
               </tr>
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={4} className="p-4">
+                <td colSpan={canManage ? 5 : 4} className="p-4">
                   <EmptyState icon="users" title="No users yet" hint="Invite your chamber's staff to collaborate." />
                 </td>
               </tr>
@@ -129,7 +143,27 @@ export default function UsersPage() {
                       {u.is_client ? "Client" : "Staff"}
                     </span>
                   </Td>
-                  <Td>{u.status}</Td>
+                  <Td>
+                    <span className={`badge ${u.status === "active" ? "badge-ok" : "badge-muted"}`}>
+                      {u.status}
+                    </span>
+                  </Td>
+                  {canManage && (
+                    <Td>
+                      {me && u.id === me.user.id ? (
+                        <span className="text-xs text-[var(--muted)]">You</span>
+                      ) : (
+                        <button
+                          onClick={() => toggleStatus(u)}
+                          className={`text-sm font-medium hover:underline ${
+                            u.status === "active" ? "text-[var(--bad)]" : "text-[var(--ok)]"
+                          }`}
+                        >
+                          {u.status === "active" ? "Deactivate" : "Reactivate"}
+                        </button>
+                      )}
+                    </Td>
+                  )}
                 </tr>
               ))
             )}
