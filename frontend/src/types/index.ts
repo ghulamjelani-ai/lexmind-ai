@@ -371,3 +371,15 @@ export interface FinanceSummary {
   invoice_count: number;
   as_of: string;
 }
+
+export interface Task {
+  id: string;
+  case_id: string | null;
+  title: string;
+  description: string | null;
+  assignee_id: string | null;
+  due_at: string | null;
+  status: string;
+  created_by: string | null;
+  created_at: string;
+}

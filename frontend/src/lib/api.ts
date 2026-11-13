@@ -31,6 +31,7 @@ import type {
   Provision,
   ReminderDispatch,
   Role,
+  Task,
   TaxAnswer,
   TaxReference,
   TrustBalance,
@@ -222,6 +223,22 @@ export const api = {
   reportSummary: () => request<CaseSummary>("/reports/summary"),
 
   casesCsvUrl: () => `${V1}/reports/cases.csv`,
+
+  // --- tasks -----------------------------------------------------------------
+  listTasks: (params: { status?: string; mine?: boolean; case_id?: string; limit?: number } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.status) qs.set("status", params.status);
+    if (params.mine) qs.set("mine", "true");
+    if (params.case_id) qs.set("case_id", params.case_id);
+    qs.set("limit", String(params.limit ?? 50));
+    return request<Page<Task>>(`/tasks?${qs.toString()}`);
+  },
+
+  createTask: (input: { title: string; description?: string; case_id?: string; due_at?: string }) =>
+    request<Task>("/tasks", { method: "POST", body: JSON.stringify(input) }),
+
+  updateTask: (id: string, patch: { status?: string; title?: string; due_at?: string | null }) =>
+    request<Task>(`/tasks/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
 
   // --- hearings --------------------------------------------------------------
   listCaseHearings: (caseId: string) => request<Hearing[]>(`/cases/${caseId}/hearings`),
