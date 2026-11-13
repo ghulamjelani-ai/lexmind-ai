@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Icon } from "@/components/icons";
 import { Markdown } from "@/components/markdown";
+import { VoiceButton } from "@/components/voice-button";
 import { PageHeader } from "@/components/ui";
 import { api, ApiError } from "@/lib/api";
 import type { AiChatMessage, Case, Citation, Conversation } from "@/types";
@@ -234,11 +235,14 @@ export default function AssistantPage() {
           </div>
 
           <form onSubmit={send} className="flex gap-2 border-t border-[var(--border)] p-3">
+            {activeId && (
+              <VoiceButton onTranscript={(t) => setInput((prev) => (prev ? `${prev} ${t}` : t))} />
+            )}
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={!activeId || sending}
-              placeholder={activeId ? "Ask a question…" : "Start a conversation first"}
+              placeholder={activeId ? "Ask a question… or tap the mic to dictate" : "Start a conversation first"}
               className="input flex-1"
             />
             <button disabled={!activeId || sending || !input.trim()} className="btn btn-primary">
