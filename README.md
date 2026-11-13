@@ -26,6 +26,22 @@ A production-oriented, secure, **multi-tenant** platform that helps law chambers
 
 ---
 
+## 📸 Screenshots
+
+| Landing | Dashboard |
+|---|---|
+| ![Landing page](docs/screenshots/landing.jpg) | ![Dashboard](docs/screenshots/dashboard.jpg) |
+
+| Financial reports | Court diary |
+|---|---|
+| ![Financial reports](docs/screenshots/reports.jpg) | ![Court diary](docs/screenshots/court-diary.jpg) |
+
+**Multilingual — dashboard in Urdu (right-to-left):**
+
+![Dashboard in Urdu, RTL](docs/screenshots/dashboard-urdu-rtl.jpg)
+
+---
+
 ## ✨ Features
 
 **Practice management**
