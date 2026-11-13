@@ -8,6 +8,7 @@ import { AuthShell } from "@/components/auth-shell";
 import { Logo } from "@/components/logo";
 import { useToast } from "@/components/toast";
 import { ApiError } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 
 export default function LoginPage() {
@@ -22,6 +23,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const toast = useToast();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (!loading && me) router.replace("/dashboard");
@@ -78,16 +80,16 @@ export default function LoginPage() {
       {/* Form */}
       <div className="flex flex-1 items-center justify-center p-6">
         <div className="w-full max-w-sm">
-          <p className="eyebrow">Sign in</p>
+          <p className="eyebrow">{t("auth.signin")}</p>
           <h1 className="mt-1 font-serif text-2xl font-semibold text-[var(--text)]">
-            Welcome back
+            {t("auth.welcomeBack")}
           </h1>
-          <p className="mt-1 text-sm text-[var(--muted)]">Sign in to your chamber workspace.</p>
+          <p className="mt-1 text-sm text-[var(--muted)]">{t("auth.subtitle")}</p>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
-            <Field label="Chamber ID" value={orgSlug} onChange={setOrgSlug} placeholder="demo-chamber" autoComplete="organization" />
-            <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@chamber.pk" autoComplete="username" />
-            <Field label="Password" type="password" value={password} onChange={setPassword} autoComplete="current-password" />
+            <Field label={t("auth.chamberId")} value={orgSlug} onChange={setOrgSlug} placeholder="demo-chamber" autoComplete="organization" />
+            <Field label={t("auth.email")} type="email" value={email} onChange={setEmail} placeholder="you@chamber.pk" autoComplete="username" />
+            <Field label={t("auth.password")} type="password" value={password} onChange={setPassword} autoComplete="current-password" />
             {mfaRequired && (
               <Field label="Authenticator code" value={mfaCode} onChange={setMfaCode} placeholder="123456" inputMode="numeric" />
             )}
@@ -95,21 +97,21 @@ export default function LoginPage() {
             {error && <p className="badge badge-bad w-full justify-start px-3 py-2 font-normal">{error}</p>}
 
             <button type="submit" disabled={submitting} className="btn btn-primary w-full py-2.5">
-              {submitting ? "Signing in…" : "Sign in"}
+              {submitting ? t("auth.signingIn") : t("auth.signinBtn")}
             </button>
           </form>
 
           <div className="mt-5 flex items-center justify-between text-sm">
             <Link href="/forgot-password" className="text-[var(--muted)] hover:text-[var(--text)]">
-              Forgot password?
+              {t("auth.forgotPw")}
             </Link>
             <Link href="/signup" className="font-medium text-[var(--brand-gold-ink)] hover:underline">
-              Create a chamber
+              {t("auth.createChamber")}
             </Link>
           </div>
           <div className="mt-2 text-sm">
             <Link href="/find-chamber" className="text-[var(--muted)] hover:text-[var(--text)]">
-              Forgot your Chamber ID?
+              {t("auth.forgotChamber")}
             </Link>
           </div>
         </div>

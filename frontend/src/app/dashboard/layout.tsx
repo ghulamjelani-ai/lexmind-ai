@@ -27,7 +27,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   if (!me) return null; // redirecting
 
   return (
-    <div className="flex flex-1 bg-[var(--bg)]">
+    <div className="flex flex-1 bg-[var(--bg)]" dir="ltr">
       <Sidebar />
       <div className="flex flex-1 flex-col">
         <Topbar />
