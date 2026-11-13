@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 
 import { Icon } from "@/components/icons";
 import { useToast } from "@/components/toast";
@@ -46,6 +46,36 @@ export default function DocumentsPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
+  const [openVersions, setOpenVersions] = useState<string | null>(null);
+  const [versions, setVersions] = useState<import("@/types").DocumentVersion[]>([]);
+  const [vLoading, setVLoading] = useState(false);
+
+  async function toggleVersions(d: LegalDocument) {
+    if (openVersions === d.id) {
+      setOpenVersions(null);
+      return;
+    }
+    setOpenVersions(d.id);
+    setVLoading(true);
+    try {
+      setVersions(await api.listDocumentVersions(d.id));
+    } catch {
+      setVersions([]);
+    } finally {
+      setVLoading(false);
+    }
+  }
+
+  async function uploadVersion(d: LegalDocument, f: File) {
+    try {
+      await api.addDocumentVersion(d.id, f);
+      await load();
+      setVersions(await api.listDocumentVersions(d.id));
+      toast.success("New version uploaded", `"${d.title}" now has an updated version.`);
+    } catch (e) {
+      toast.error("Couldn't upload version", e instanceof ApiError ? e.message : "Please try again.");
+    }
+  }
 
   async function load() {
     try {
@@ -159,21 +189,60 @@ export default function DocumentsPage() {
             </thead>
             <tbody>
               {docs.map((d) => (
-                <tr key={d.id} className="border-b border-[var(--border)] last:border-0">
-                  <td className="px-4 py-3 font-medium text-[var(--text)]">{d.title}</td>
-                  <td className="px-4 py-3 capitalize text-[var(--muted)]">{d.category}</td>
-                  <td className="px-4 py-3 text-[var(--muted)]">{fmtSize(d.size)}</td>
-                  <td className="px-4 py-3">
-                    <span className={`badge ${SCAN[d.scan_status] ?? "badge-muted"}`}>{d.scan_status}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-3 text-xs">
-                      <a href={api.documentDownloadUrl(d.id)} className="text-[var(--info)] hover:underline">Download</a>
-                      <button onClick={() => index(d)} className="text-[var(--brand-gold-ink)] hover:underline">Index to KB</button>
-                      <button onClick={() => remove(d)} className="text-[var(--muted)] hover:text-[var(--bad)]">Delete</button>
-                    </div>
-                  </td>
-                </tr>
+                <Fragment key={d.id}>
+                  <tr className="border-b border-[var(--border)] last:border-0">
+                    <td className="px-4 py-3 font-medium text-[var(--text)]">{d.title}</td>
+                    <td className="px-4 py-3 capitalize text-[var(--muted)]">{d.category}</td>
+                    <td className="px-4 py-3 text-[var(--muted)]">{fmtSize(d.size)}</td>
+                    <td className="px-4 py-3">
+                      <span className={`badge ${SCAN[d.scan_status] ?? "badge-muted"}`}>{d.scan_status}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-3 text-xs">
+                        <a href={api.documentDownloadUrl(d.id)} className="text-[var(--info)] hover:underline">Download</a>
+                        <button onClick={() => toggleVersions(d)} className="text-[var(--text)] hover:underline">Versions</button>
+                        <button onClick={() => index(d)} className="text-[var(--brand-gold-ink)] hover:underline">Index to KB</button>
+                        <button onClick={() => remove(d)} className="text-[var(--muted)] hover:text-[var(--bad)]">Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                  {openVersions === d.id && (
+                    <tr className="border-b border-[var(--border)] bg-[var(--surface-2)]">
+                      <td colSpan={5} className="px-4 py-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Version history</p>
+                          <label className="cursor-pointer text-xs font-medium text-[var(--brand-gold-ink)] hover:underline">
+                            + Upload new version
+                            <input
+                              type="file"
+                              className="hidden"
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) void uploadVersion(d, f);
+                                e.target.value = "";
+                              }}
+                            />
+                          </label>
+                        </div>
+                        {vLoading ? (
+                          <p className="mt-2 text-xs text-[var(--muted)]">Loading…</p>
+                        ) : versions.length === 0 ? (
+                          <p className="mt-2 text-xs text-[var(--muted)]">Only the original version exists.</p>
+                        ) : (
+                          <ul className="mt-2 space-y-1">
+                            {versions.map((v) => (
+                              <li key={v.id} className="flex items-center justify-between text-xs text-[var(--muted)]">
+                                <span className="text-[var(--text)]">v{v.version_no}</span>
+                                <span>{fmtSize(v.size)}</span>
+                                <span>{new Date(v.created_at).toLocaleString()}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               ))}
             </tbody>
           </table>

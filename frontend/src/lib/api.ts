@@ -13,6 +13,7 @@ import type {
   CaseAnalysis,
   Client,
   ClientLite,
+  DocumentVersion,
   LegalDocument,
   CaseEvent,
   CaseSummary,
@@ -356,6 +357,26 @@ export const api = {
   indexDocument: (id: string) => request<{ chunks: number } | unknown>(`/documents/${id}/index`, { method: "POST" }),
 
   deleteDocument: (id: string) => request<void>(`/documents/${id}`, { method: "DELETE" }),
+
+  listDocumentVersions: (id: string) =>
+    request<DocumentVersion[]>(`/documents/${id}/versions`),
+
+  addDocumentVersion: async (id: string, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch(`${V1}/documents/${id}/versions`, { method: "POST", credentials: "include", body: form });
+    if (!res.ok) {
+      let detail = res.statusText;
+      try {
+        const b = await res.json();
+        if (typeof b?.detail === "string") detail = b.detail;
+      } catch {
+        /* ignore */
+      }
+      throw new ApiError(res.status, detail);
+    }
+    return (await res.json()) as LegalDocument;
+  },
 
   // --- account / MFA ---------------------------------------------------------
   mfaEnroll: () => request<{ secret: string; otpauth_uri: string }>("/auth/mfa/enroll", { method: "POST" }),

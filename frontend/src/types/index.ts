@@ -392,3 +392,13 @@ export interface CalendarItem {
   at: string;
   status: string;
 }
+
+export interface DocumentVersion {
+  id: string;
+  document_id: string;
+  version_no: number;
+  mime: string | null;
+  size: number;
+  checksum: string | null;
+  created_at: string;
+}
