@@ -104,7 +104,14 @@ export default function DashboardHome() {
             </div>
 
             {queue === null ? (
-              <p className="text-sm text-[var(--muted)]">Loading…</p>
+              <ul className="animate-pulse divide-y divide-[var(--border)]">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <li key={i} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                    <div className="h-4 w-1/2 rounded bg-[var(--surface-2)]" />
+                    <div className="h-5 w-10 rounded bg-[var(--surface-2)]" />
+                  </li>
+                ))}
+              </ul>
             ) : queue.length === 0 ? (
               <EmptyState title="No active cases yet" hint="Create a case to see it ranked here." />
             ) : (

@@ -174,7 +174,15 @@ export default function AssistantPage() {
         <div className="card flex min-h-[460px] flex-col p-0">
           <div className="flex-1 space-y-4 overflow-y-auto p-5">
             {!activeId ? (
-              <p className="text-sm text-[var(--muted)]">Start or pick a conversation to begin.</p>
+              <div className="flex h-full min-h-[320px] flex-col items-center justify-center text-center">
+                <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-2)] text-[var(--brand-gold-ink)]">
+                  <Icon name="spark" className="h-5 w-5" />
+                </span>
+                <p className="text-sm font-medium text-[var(--text)]">Start a conversation</p>
+                <p className="mt-1 max-w-xs text-sm text-[var(--muted)]">
+                  Pick a chat on the left, or start a new one — general research or grounded in a specific case.
+                </p>
+              </div>
             ) : messages.length === 0 ? (
               <div>
                 <p className="mb-3 text-sm text-[var(--muted)]">
