@@ -5,9 +5,12 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
+from pydantic import BaseModel, Field
+
 from app.api.deps import get_tenant_db, require, require_not_restricted
 from app.core.rbac import AuthContext
 from app.models.finance import Invoice
+from app.models.organization import Organization
 from app.schemas.finance import (
     ExpenseIn,
     ExpenseOut,
@@ -22,11 +25,26 @@ from app.schemas.finance import (
     TrustIn,
     TrustTxnOut,
 )
-from app.services import finance_service
+from app.services import finance_service, recurring_service
 from app.services.finance_service import FinanceError
 
 router = APIRouter(prefix="/finance", tags=["finance"])
 _GATE = "clients:manage"
+
+
+class RecurringCreate(BaseModel):
+    client_id: uuid.UUID
+    description: str = Field(min_length=1, max_length=300)
+    unit_amount: int = Field(ge=0)  # paisa
+    quantity: int = Field(default=1, ge=1)
+    interval_days: int = Field(default=30, ge=1, le=366)
+
+
+def _org(db: Session, ctx: AuthContext) -> Organization:
+    org = db.get(Organization, ctx.organization_id)
+    if org is None:
+        raise HTTPException(status_code=404, detail="Organization not found")
+    return org
 
 
 def _base_fields(inv: Invoice, total: int, paid: int) -> dict:
@@ -206,3 +224,51 @@ def trust_balance(
             TrustTxnOut.model_validate(t) for t in finance_service.trust_ledger(db, ctx, client_id)
         ],
     )
+
+
+# --- recurring invoices (retainers) ------------------------------------------
+@router.get("/recurring")
+def list_recurring(
+    db: Session = Depends(get_tenant_db),
+    ctx: AuthContext = Depends(require(_GATE)),
+) -> list[dict]:
+    return recurring_service.list_templates(_org(db, ctx))
+
+
+@router.post("/recurring")
+def create_recurring(
+    body: RecurringCreate,
+    db: Session = Depends(get_tenant_db),
+    ctx: AuthContext = Depends(require(_GATE)),
+) -> dict:
+    tpl = recurring_service.add_template(
+        db, _org(db, ctx),
+        client_id=str(body.client_id),
+        description=body.description,
+        unit_amount=body.unit_amount,
+        quantity=body.quantity,
+        interval_days=body.interval_days,
+    )
+    db.commit()
+    return tpl
+
+
+@router.delete("/recurring/{template_id}", status_code=204)
+def delete_recurring(
+    template_id: str,
+    db: Session = Depends(get_tenant_db),
+    ctx: AuthContext = Depends(require(_GATE)),
+) -> None:
+    if not recurring_service.remove_template(db, _org(db, ctx), template_id):
+        raise HTTPException(status_code=404, detail="Template not found")
+    db.commit()
+
+
+@router.post("/recurring/run", dependencies=[Depends(require_not_restricted)])
+def run_recurring(
+    db: Session = Depends(get_tenant_db),
+    ctx: AuthContext = Depends(require(_GATE)),
+) -> dict:
+    result = recurring_service.run_due(db, ctx, _org(db, ctx))
+    db.commit()
+    return result

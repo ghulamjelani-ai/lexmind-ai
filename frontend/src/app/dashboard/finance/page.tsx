@@ -20,7 +20,7 @@ const STATUS: Record<string, string> = {
   void: "badge-muted",
 };
 
-type Tab = "invoices" | "expenses" | "trust";
+type Tab = "invoices" | "expenses" | "trust" | "recurring";
 
 export default function FinancePage() {
   const [summary, setSummary] = useState<FinanceSummary | null>(null);
@@ -71,7 +71,7 @@ export default function FinancePage() {
 
       {/* Tabs */}
       <div className="mt-7 flex gap-1 overflow-x-auto border-b border-[var(--border)]">
-        {(["invoices", "expenses", "trust"] as Tab[]).map((t) => (
+        {(["invoices", "expenses", "trust", "recurring"] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -90,6 +90,7 @@ export default function FinancePage() {
         {tab === "invoices" && <InvoicesTab clients={clients} onChange={loadSummary} />}
         {tab === "expenses" && <ExpensesTab onChange={loadSummary} />}
         {tab === "trust" && <TrustTab clients={clients} onChange={loadSummary} />}
+        {tab === "recurring" && <RecurringTab clients={clients} onChange={loadSummary} />}
       </div>
     </div>
   );
@@ -501,6 +502,124 @@ function TrustTab({ clients, onChange }: { clients: ClientLite[]; onChange: () =
           </div>
         )}
       </Card>
+    </div>
+  );
+}
+
+/* ------------------------------- Recurring -------------------------------- */
+function RecurringTab({ clients, onChange }: { clients: ClientLite[]; onChange: () => void }) {
+  const [rows, setRows] = useState<Awaited<ReturnType<typeof api.listRecurring>>>([]);
+  const [clientId, setClientId] = useState("");
+  const [desc, setDesc] = useState("");
+  const [amount, setAmount] = useState("");
+  const [interval, setIntervalDays] = useState("30");
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+
+  async function load() {
+    setRows(await api.listRecurring());
+  }
+  useEffect(() => {
+    void load();
+  }, []);
+
+  async function add(e: React.FormEvent) {
+    e.preventDefault();
+    if (!clientId || !desc.trim() || !amount) return;
+    setBusy(true);
+    try {
+      await api.createRecurring({
+        client_id: clientId,
+        description: desc.trim(),
+        unit_amount: toPaisa(amount),
+        interval_days: parseInt(interval) || 30,
+      });
+      setDesc("");
+      setAmount("");
+      await load();
+      onChange();
+      toast.success("Retainer scheduled", "A recurring invoice has been set up.");
+    } catch (e) {
+      toast.error("Couldn't add retainer", e instanceof ApiError ? e.message : "Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove(id: string) {
+    if (!window.confirm("Remove this recurring retainer?")) return;
+    try {
+      await api.deleteRecurring(id);
+      await load();
+      toast.success("Retainer removed", "It will no longer generate invoices.");
+    } catch (e) {
+      toast.error("Couldn't remove", e instanceof ApiError ? e.message : "Please try again.");
+    }
+  }
+
+  async function run() {
+    try {
+      const r = await api.runRecurring();
+      await load();
+      onChange();
+      toast.success("Recurring run complete", r.created ? `${r.created} invoice(s) generated.` : "No invoices were due today.");
+    } catch (e) {
+      toast.error("Couldn't run recurring", e instanceof ApiError ? e.message : "Please try again.");
+    }
+  }
+
+  const clientName = (id: string) => clients.find((c) => c.id === id)?.full_name ?? "—";
+
+  return (
+    <div>
+      <Card className="mb-5">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="eyebrow">New retainer</p>
+          <button onClick={run} className="btn btn-gold">Run due now</button>
+        </div>
+        <form onSubmit={add} className="flex flex-wrap items-end gap-2">
+          <label className="min-w-[12rem] flex-1">
+            <span className="mb-1 block text-sm font-medium text-[var(--text)]">Client</span>
+            <select value={clientId} onChange={(e) => setClientId(e.target.value)} className="select">
+              <option value="">Select a client…</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>{c.full_name}</option>
+              ))}
+            </select>
+          </label>
+          <input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Description (e.g. Monthly retainer)" className="input min-w-[12rem] flex-1" />
+          <input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Amount (Rs)" className="input w-32" inputMode="decimal" />
+          <label>
+            <span className="mb-1 block text-xs text-[var(--muted)]">Every (days)</span>
+            <input value={interval} onChange={(e) => setIntervalDays(e.target.value)} className="input w-24" inputMode="numeric" />
+          </label>
+          <button disabled={busy || !clientId || !desc.trim() || !amount} className="btn btn-primary">
+            {busy ? "Saving…" : "Add"}
+          </button>
+        </form>
+      </Card>
+
+      {rows.length === 0 ? (
+        <EmptyState icon="receipt" title="No retainers yet" hint="Set up a recurring invoice above, then 'Run due now' to generate them." />
+      ) : (
+        <div className="card overflow-x-auto p-0">
+          <table className="w-full min-w-[560px] text-left text-sm">
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id} className="border-b border-[var(--border)] last:border-0">
+                  <td className="px-4 py-3 font-medium text-[var(--text)]">{r.description}</td>
+                  <td className="px-4 py-3 text-[var(--muted)]">{clientName(r.client_id)}</td>
+                  <td className="px-4 py-3 text-[var(--text)]">{PKR(r.unit_amount * r.quantity)}</td>
+                  <td className="px-4 py-3 text-[var(--muted)]">every {r.interval_days}d · next {r.next_run}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={() => remove(r.id)} className="text-xs text-[var(--muted)] hover:text-[var(--bad)]">Remove</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

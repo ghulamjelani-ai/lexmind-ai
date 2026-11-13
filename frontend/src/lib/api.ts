@@ -437,6 +437,18 @@ export const api = {
   trustTxn: (input: { client_id: string; kind: string; amount: number; note?: string }) =>
     request<TrustTxn>("/finance/trust", { method: "POST", body: JSON.stringify(input) }),
 
+  listRecurring: () =>
+    request<{ id: string; client_id: string; description: string; unit_amount: number; quantity: number; interval_days: number; next_run: string; active: boolean }[]>(
+      "/finance/recurring",
+    ),
+
+  createRecurring: (input: { client_id: string; description: string; unit_amount: number; quantity?: number; interval_days?: number }) =>
+    request<unknown>("/finance/recurring", { method: "POST", body: JSON.stringify(input) }),
+
+  deleteRecurring: (id: string) => request<void>(`/finance/recurring/${id}`, { method: "DELETE" }),
+
+  runRecurring: () => request<{ created: number; invoices: string[] }>("/finance/recurring/run", { method: "POST" }),
+
   trustBalance: (clientId: string) => request<TrustBalance>(`/finance/trust/${clientId}`),
 
   aiListConversations: () => request<Conversation[]>("/ai/conversations"),
