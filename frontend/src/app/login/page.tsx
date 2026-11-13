@@ -107,6 +107,11 @@ export default function LoginPage() {
               Create a chamber
             </Link>
           </div>
+          <div className="mt-2 text-sm">
+            <Link href="/find-chamber" className="text-[var(--muted)] hover:text-[var(--text)]">
+              Forgot your Chamber ID?
+            </Link>
+          </div>
         </div>
       </div>
     </main>

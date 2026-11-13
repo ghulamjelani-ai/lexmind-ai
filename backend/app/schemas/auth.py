@@ -23,6 +23,10 @@ class MfaCodeIn(BaseModel):
     code: str = Field(min_length=6, max_length=12)
 
 
+class ChamberLookupIn(BaseModel):
+    email: EmailStr
+
+
 class PasswordResetRequestIn(BaseModel):
     org_slug: str = Field(min_length=1, max_length=120)
     email: EmailStr

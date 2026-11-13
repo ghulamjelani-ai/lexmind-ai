@@ -11,7 +11,7 @@ from app.core.email import send_email
 from app.core.ratelimit import rate_limit
 from app.core.security import hash_token
 from app.core.rbac import AuthContext
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.db.session import get_db
 from app.models.organization import Organization
@@ -22,6 +22,7 @@ from app.schemas.auth import (
     MessageOut,
     MfaCodeIn,
     MfaEnrollOut,
+    ChamberLookupIn,
     PasswordChangeIn,
     ProfileUpdateIn,
     PasswordResetConfirmIn,
@@ -211,6 +212,36 @@ def mfa_disable(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     db.commit()
     return MessageOut(message="MFA disabled")
+
+
+# --- Chamber ID recovery -----------------------------------------------------
+@router.post(
+    "/chamber-lookup",
+    response_model=MessageOut,
+    dependencies=[Depends(rate_limit("chamber_lookup", 5, 300))],
+)
+def chamber_lookup(body: ChamberLookupIn, db: Session = Depends(get_db)) -> MessageOut:
+    """Email a user the Chamber ID(s) their address is registered under. Always
+    returns the same message (no account enumeration in the response)."""
+    users = db.scalars(
+        select(User).where(
+            func.lower(User.email) == body.email.lower(), User.deleted_at.is_(None)
+        )
+    ).all()
+    org_ids = {u.organization_id for u in users}
+    if org_ids:
+        orgs = db.scalars(select(Organization).where(Organization.id.in_(org_ids))).all()
+        lines = "\n".join(f"  • {o.name} — Chamber ID: {o.slug}" for o in orgs)
+        settings = get_settings()
+        send_email(
+            body.email,
+            "Your LexMind Chamber ID",
+            "You asked to recover your LexMind Chamber ID.\n\n"
+            f"Your email is registered to the following chamber(s):\n\n{lines}\n\n"
+            f"Sign in at {settings.app_url.rstrip('/')}/login using the Chamber ID above, "
+            "your email, and your password.",
+        )
+    return MessageOut(message="If that email is registered, we've emailed your Chamber ID(s).")
 
 
 # --- Password reset ----------------------------------------------------------

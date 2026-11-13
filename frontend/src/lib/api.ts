@@ -115,6 +115,12 @@ export const api = {
       body: JSON.stringify({ org_slug, email }),
     }),
 
+  chamberLookup: (email: string) =>
+    request<{ message: string }>("/auth/chamber-lookup", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
   passwordResetConfirm: (token: string, new_password: string) =>
     request<{ message: string }>("/auth/password-reset/confirm", {
       method: "POST",
