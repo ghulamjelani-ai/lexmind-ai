@@ -32,6 +32,10 @@
 | Document versioning UI | **Verified** | add version → v2,v1 |
 | Active sessions / device mgmt | **Verified** | revoke → 401 for that session |
 | Recurring billing (retainers) | **Verified** | create retainer → run-due generated INV-00005 (4→5 invoices) |
+| **Email OTP verification on signup** | **Verified** | /orgs/register removed (404); /auth/register/start 200; wrong code 400; local happy-path creates chamber only after OTP |
+| Clearer sign-in errors (unknown Chamber ID) | **Verified** | 404 for unknown chamber vs 401 wrong password |
+| Forgot Chamber ID (email recovery) | **Verified** | endpoint 200; emails chamber slug(s) to the address |
+| Client portal documents | **Verified** | portal shows the client's case documents |
 | Competitive benchmark + roadmap | **Delivered** | `docs/COMPETITIVE_BENCHMARK.md` |
 
 ## 2. Module status (functional/tested/secure)
@@ -47,7 +51,8 @@
 - **Google OAuth (blocked):** needs Google Cloud OAuth credentials from the owner. Not implementable without them.
 - **Super Admin / cross-tenant platform BI (deferred, by design):** LexMind enforces strict per-tenant RLS. A true cross-tenant super-admin must deliberately operate above RLS with its own hardened auth + audit. This is a significant, security-sensitive addition and was **intentionally not rushed**; it is specified in the roadmap for a dedicated effort.
 - **Urdu / RTL (deferred):** the UI is English + mobile + dark-mode ready; full Urdu translation + RTL is a large content effort, scoped for later.
-- **Client portal limitations:** client↔record link is by explicit `user_id` or one-time email match; documents are not yet surfaced in the portal (cases + invoices are). OTP email verification on signup is not yet enforced.
+- **Client portal:** client↔record link is by explicit `user_id` or one-time email match; portal now surfaces cases, invoices and documents.
+- **Signup email verification depends on email delivery:** OTP signup is enforced, but because Resend has no verified domain yet, the code only reaches `lexmindai024@gmail.com` — so real multi-address signup needs the Resend domain verified. The same applies to password-reset and Chamber-ID-recovery emails.
 - **AI accuracy:** outputs are grounded with citations and flagged verify-before-use; they are **not** guaranteed correct — by design, a lawyer must verify.
 
 ## 4. Outstanding risks
