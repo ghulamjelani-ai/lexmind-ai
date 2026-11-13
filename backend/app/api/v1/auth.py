@@ -11,7 +11,10 @@ from app.core.email import send_email
 from app.core.ratelimit import rate_limit
 from app.core.security import hash_token
 from app.core.rbac import AuthContext
+from sqlalchemy import select
+
 from app.db.session import get_db
+from app.models.organization import Organization
 from app.models.user import User
 from app.schemas.auth import (
     LoginRequest,
@@ -59,20 +62,36 @@ def login(
     response: Response,
     db: Session = Depends(get_db),
 ) -> MeOut:
+    # A wrong Chamber ID is the most common sign-in mistake, so surface it
+    # clearly. (We still never reveal whether the email vs the password is wrong.)
+    org = db.scalar(select(Organization).where(Organization.slug == body.org_slug.strip()))
+    if org is None:
+        audit_service.record(
+            db, action="auth.login", result="deny", ip=_ip(request),
+            user_agent=request.headers.get("user-agent"),
+            metadata={"org_slug": body.org_slug, "reason": "unknown_chamber"},
+        )
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Chamber ID '{body.org_slug}' not found. Check the Chamber ID you chose when creating your chamber.",
+        )
+
     user = auth_service.authenticate(db, body.org_slug, body.email, body.password)
     if user is None:
         audit_service.record(
             db,
             action="auth.login",
             result="deny",
+            organization_id=org.id,
             ip=_ip(request),
             user_agent=request.headers.get("user-agent"),
             metadata={"org_slug": body.org_slug, "email": body.email},
         )
         db.commit()
-        # Do not reveal whether org/email exists.
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password for this chamber.",
         )
 
     if not mfa_service.verify_login(user, body.mfa_code):
