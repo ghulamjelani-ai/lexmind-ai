@@ -284,6 +284,11 @@ export const api = {
     address?: string;
   }) => request<Client>("/clients", { method: "POST", body: JSON.stringify(input) }),
 
+  updateClient: (
+    id: string,
+    input: { full_name?: string; cnic?: string; email?: string; phone?: string; address?: string },
+  ) => request<Client>(`/clients/${id}`, { method: "PATCH", body: JSON.stringify(input) }),
+
   deleteClient: (id: string) => request<void>(`/clients/${id}`, { method: "DELETE" }),
 
   // --- documents -------------------------------------------------------------

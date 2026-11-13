@@ -14,6 +14,42 @@ export default function ClientsPage() {
   const [form, setForm] = useState({ full_name: "", email: "", phone: "", cnic: "", address: "" });
   const [busy, setBusy] = useState(false);
   const toast = useToast();
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ full_name: "", email: "", phone: "", address: "" });
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  function startEdit(c: Client) {
+    setEditId(c.id);
+    setEditForm({
+      full_name: c.full_name,
+      email: c.email ?? "",
+      phone: c.phone ?? "",
+      address: c.address ?? "",
+    });
+  }
+
+  async function saveEdit(id: string) {
+    if (!editForm.full_name.trim()) {
+      toast.error("Name required", "A client must have a name.");
+      return;
+    }
+    setSavingEdit(true);
+    try {
+      await api.updateClient(id, {
+        full_name: editForm.full_name.trim(),
+        email: editForm.email.trim() || undefined,
+        phone: editForm.phone.trim() || undefined,
+        address: editForm.address.trim() || undefined,
+      });
+      setEditId(null);
+      await load();
+      toast.success("Client updated", "Changes have been saved.");
+    } catch (e) {
+      toast.error("Couldn't update client", e instanceof ApiError ? e.message : "Please try again.");
+    } finally {
+      setSavingEdit(false);
+    }
+  }
 
   async function load() {
     try {
@@ -136,21 +172,49 @@ export default function ClientsPage() {
               </tr>
             </thead>
             <tbody>
-              {clients.map((c) => (
-                <tr key={c.id} className="border-b border-[var(--border)] last:border-0">
-                  <td className="px-4 py-3 font-medium text-[var(--text)]">{c.full_name}</td>
-                  <td className="px-4 py-3 text-[var(--muted)]">{c.email ?? "—"}</td>
-                  <td className="px-4 py-3 text-[var(--muted)]">{c.phone ?? "—"}</td>
-                  <td className="px-4 py-3">
-                    {c.has_cnic ? <span className="badge badge-ok">on file</span> : <span className="text-[var(--muted)]">—</span>}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button onClick={() => remove(c.id)} className="text-xs text-[var(--muted)] hover:text-[var(--bad)]">
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {clients.map((c) =>
+                editId === c.id ? (
+                  <tr key={c.id} className="border-b border-[var(--border)] last:border-0">
+                    <td className="px-4 py-2">
+                      <input value={editForm.full_name} onChange={(e) => setEditForm((f) => ({ ...f, full_name: e.target.value }))} className="input" />
+                    </td>
+                    <td className="px-4 py-2">
+                      <input value={editForm.email} onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))} placeholder="Email" className="input" />
+                    </td>
+                    <td className="px-4 py-2">
+                      <input value={editForm.phone} onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))} placeholder="Phone" className="input" />
+                    </td>
+                    <td className="px-4 py-2">
+                      <input value={editForm.address} onChange={(e) => setEditForm((f) => ({ ...f, address: e.target.value }))} placeholder="Address" className="input" />
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-2 text-right">
+                      <button onClick={() => saveEdit(c.id)} disabled={savingEdit} className="text-xs font-medium text-[var(--ok)] hover:underline">
+                        {savingEdit ? "Saving…" : "Save"}
+                      </button>
+                      <button onClick={() => setEditId(null)} className="ml-3 text-xs text-[var(--muted)] hover:underline">
+                        Cancel
+                      </button>
+                    </td>
+                  </tr>
+                ) : (
+                  <tr key={c.id} className="border-b border-[var(--border)] last:border-0">
+                    <td className="px-4 py-3 font-medium text-[var(--text)]">{c.full_name}</td>
+                    <td className="px-4 py-3 text-[var(--muted)]">{c.email ?? "—"}</td>
+                    <td className="px-4 py-3 text-[var(--muted)]">{c.phone ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      {c.has_cnic ? <span className="badge badge-ok">on file</span> : <span className="text-[var(--muted)]">—</span>}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-right">
+                      <button onClick={() => startEdit(c)} className="text-xs text-[var(--muted)] hover:text-[var(--text)]">
+                        Edit
+                      </button>
+                      <button onClick={() => remove(c.id)} className="ml-3 text-xs text-[var(--muted)] hover:text-[var(--bad)]">
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                ),
+              )}
             </tbody>
           </table>
         </div>
