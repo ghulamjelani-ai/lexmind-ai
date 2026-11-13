@@ -27,6 +27,7 @@ import type {
   Lead,
   LegalDraft,
   Me,
+  Notification,
   Organization,
   Page,
   PriorityScore,
@@ -157,6 +158,8 @@ export const api = {
     request<Me>("/auth/me", { method: "PATCH", body: JSON.stringify({ full_name }) }),
 
   myOrg: () => request<Organization>("/orgs/me"),
+
+  listNotifications: (limit = 8) => request<Page<Notification>>(`/notifications?limit=${limit}`),
 
   subscription: () =>
     request<{

@@ -176,7 +176,51 @@ export default function DashboardHome() {
           </div>
         </Card>
       </div>
+
+      <div className="mt-6">
+        <ActivityFeed />
+      </div>
     </div>
+  );
+}
+
+function ActivityFeed() {
+  const [items, setItems] = useState<import("@/types").Notification[] | null>(null);
+
+  useEffect(() => {
+    api
+      .listNotifications(8)
+      .then((p) => setItems(p.items))
+      .catch(() => setItems([]));
+  }, []);
+
+  return (
+    <Card>
+      <div className="mb-3 flex items-center gap-2">
+        <Icon name="bolt" className="h-4 w-4 text-[var(--brand-gold-ink)]" />
+        <h2 className="font-serif text-lg font-semibold text-[var(--text)]">Recent activity</h2>
+      </div>
+      {items === null ? (
+        <p className="text-sm text-[var(--muted)]">Loading…</p>
+      ) : items.length === 0 ? (
+        <p className="text-sm text-[var(--muted)]">No recent activity yet — it will appear here as your chamber works.</p>
+      ) : (
+        <ul className="divide-y divide-[var(--border)]">
+          {items.map((n) => (
+            <li key={n.id} className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
+              <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[var(--brand-gold)]" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-[var(--text)]">{n.title}</p>
+                {n.body && <p className="truncate text-xs text-[var(--muted)]">{n.body}</p>}
+              </div>
+              <span className="shrink-0 text-xs text-[var(--muted)]">
+                {new Date(n.created_at).toLocaleDateString()}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   );
 }
 
@@ -191,21 +235,20 @@ function Stat({
   value: string | number;
   tone: "ink" | "gold" | "bad" | "muted";
 }) {
-  const toneCls = {
-    ink: "bg-[var(--brand-ink)] text-[var(--brand-gold)]",
-    gold: "bg-[var(--warn-bg)] text-[var(--warn)]",
-    bad: "bg-[var(--bad-bg)] text-[var(--bad)]",
-    muted: "bg-[var(--surface-2)] text-[var(--muted)]",
+  const grad = {
+    ink: "from-[#0b1b3a] to-[#1e3a6b]",
+    gold: "from-[#a9761a] to-[#e7b24c]",
+    bad: "from-[#9e2f46] to-[#d4455f]",
+    muted: "from-[#394a66] to-[#5f7291]",
   }[tone];
   return (
-    <div className="card flex items-center gap-3 p-4">
-      <span className={`flex h-10 w-10 items-center justify-center rounded-[10px] ${toneCls}`}>
+    <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${grad} p-5 text-white shadow-[0_8px_24px_-10px_rgba(11,27,58,0.5)]`}>
+      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 backdrop-blur">
         <Icon name={icon} className="h-5 w-5" />
       </span>
-      <div>
-        <p className="text-xs text-[var(--muted)]">{label}</p>
-        <p className="font-serif text-xl font-semibold tabular-nums text-[var(--text)]">{value}</p>
-      </div>
+      <p className="mt-4 font-serif text-3xl font-semibold tabular-nums leading-none">{value}</p>
+      <p className="mt-1.5 text-sm text-white/80">{label}</p>
+      <span className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10" />
     </div>
   );
 }

@@ -402,3 +402,12 @@ export interface DocumentVersion {
   checksum: string | null;
   created_at: string;
 }
+
+export interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  read_at: string | null;
+  created_at: string;
+}
