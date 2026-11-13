@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Icon } from "@/components/icons";
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/lib/auth-context";
+import { useI18n } from "@/lib/i18n";
 import { NAV_ITEMS } from "@/lib/nav";
 
 /**
@@ -17,6 +18,7 @@ export function MobileNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const { can, me } = useAuth();
+  const { t } = useI18n();
 
   const items = NAV_ITEMS.filter((i) => {
     if (i.clientOnly && !me?.user.is_client) return false;
@@ -85,7 +87,7 @@ export function MobileNav() {
                               name={item.icon}
                               className={`h-[18px] w-[18px] ${active ? "text-[var(--brand-gold)]" : ""}`}
                             />
-                            {item.label}
+                            {t(item.label)}
                           </Link>
                         );
                       })}

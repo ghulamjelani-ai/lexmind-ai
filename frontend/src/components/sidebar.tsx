@@ -6,11 +6,13 @@ import { usePathname } from "next/navigation";
 import { Icon } from "@/components/icons";
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/lib/auth-context";
+import { useI18n } from "@/lib/i18n";
 import { NAV_ITEMS } from "@/lib/nav";
 
 export function Sidebar() {
   const pathname = usePathname();
   const { can, me } = useAuth();
+  const { t } = useI18n();
 
   const items = NAV_ITEMS.filter((i) => {
     if (i.clientOnly && !me?.user.is_client) return false;
@@ -27,7 +29,7 @@ export function Sidebar() {
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-6">
         {groups.map((group) => (
           <div key={group}>
-            <p className="eyebrow px-3 pb-2">{group}</p>
+            <p className="eyebrow px-3 pb-2">{t(group)}</p>
             <div className="space-y-0.5">
               {items
                 .filter((i) => i.group === group)
@@ -53,7 +55,7 @@ export function Sidebar() {
                         name={item.icon}
                         className={`h-[18px] w-[18px] ${active ? "text-[var(--brand-gold)]" : ""}`}
                       />
-                      {item.label}
+                      {t(item.label)}
                     </Link>
                   );
                 })}

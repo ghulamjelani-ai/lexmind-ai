@@ -2,13 +2,16 @@
 
 import { useRouter } from "next/navigation";
 
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { MobileNav } from "@/components/mobile-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/lib/auth-context";
+import { useI18n } from "@/lib/i18n";
 
 export function Topbar() {
   const router = useRouter();
   const { me, logout } = useAuth();
+  const { t } = useI18n();
 
   async function onLogout() {
     await logout();
@@ -30,7 +33,7 @@ export function Topbar() {
         <div className="hidden text-sm text-[var(--muted)] sm:block">
           {me ? (
             <span>
-              Signed in as{" "}
+              {t("Signed in as")}{" "}
               <span className="font-medium text-[var(--text)]">{me.user.full_name}</span>
             </span>
           ) : null}
@@ -45,14 +48,15 @@ export function Topbar() {
             <div className="leading-tight">
               <p className="text-sm font-medium text-[var(--text)]">{me.user.email}</p>
               <p className="text-[11px] text-[var(--muted)]">
-                {me.user.is_client ? "Client" : "Staff"}
+                {me.user.is_client ? t("Client") : t("Staff")}
               </p>
             </div>
           </div>
         )}
+        <LanguageSwitcher />
         <ThemeToggle />
         <button onClick={onLogout} className="btn btn-ghost">
-          Sign out
+          {t("Sign out")}
         </button>
       </div>
     </header>

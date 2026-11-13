@@ -1,6 +1,9 @@
+"use client";
+
 import type { ReactNode } from "react";
 
 import { Icon } from "@/components/icons";
+import { useI18n } from "@/lib/i18n";
 
 export function PageHeader({
   eyebrow,
@@ -13,14 +16,15 @@ export function PageHeader({
   subtitle?: string;
   actions?: ReactNode;
 }) {
+  const { t } = useI18n();
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
-        {eyebrow && <p className="eyebrow mb-1">{eyebrow}</p>}
+        {eyebrow && <p className="eyebrow mb-1">{t(eyebrow)}</p>}
         <h1 className="font-serif text-2xl font-semibold tracking-tight text-[var(--text)]">
-          {title}
+          {t(title)}
         </h1>
-        {subtitle && <p className="mt-1 max-w-2xl text-sm text-[var(--muted)]">{subtitle}</p>}
+        {subtitle && <p className="mt-1 max-w-2xl text-sm text-[var(--muted)]">{t(subtitle)}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>

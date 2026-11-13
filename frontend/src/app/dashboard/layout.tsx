@@ -7,10 +7,12 @@ import { Sidebar } from "@/components/sidebar";
 import { SubscriptionBanner } from "@/components/subscription-banner";
 import { Topbar } from "@/components/topbar";
 import { useAuth } from "@/lib/auth-context";
+import { useI18n } from "@/lib/i18n";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const { me, loading } = useAuth();
+  const { rtl } = useI18n();
 
   useEffect(() => {
     if (!loading && !me) router.replace("/login");
@@ -27,7 +29,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   if (!me) return null; // redirecting
 
   return (
-    <div className="flex flex-1 bg-[var(--bg)]" dir="ltr">
+    <div className="flex flex-1 bg-[var(--bg)]" dir={rtl ? "rtl" : "ltr"}>
       <Sidebar />
       <div className="flex flex-1 flex-col">
         <Topbar />
