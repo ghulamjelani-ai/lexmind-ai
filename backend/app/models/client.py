@@ -20,6 +20,9 @@ class Client(UUIDMixin, TimestampMixin, TenantMixin, SoftDeleteMixin, Base):
     address: Mapped[str | None] = mapped_column(String(512), nullable=True)
     assigned_lawyer_id: Mapped[uuid.UUID | None] = mapped_column(GUID(), nullable=True)
     created_by: Mapped[uuid.UUID | None] = mapped_column(GUID(), nullable=True)
+    # Links a client *record* to a client *user account* (is_client), so the
+    # client portal can scope strictly to this client's own cases.
+    user_id: Mapped[uuid.UUID | None] = mapped_column(GUID(), index=True, nullable=True)
 
     @property
     def has_cnic(self) -> bool:

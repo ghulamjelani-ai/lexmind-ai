@@ -9,10 +9,12 @@ export interface NavItem {
   permission: string | null;
   icon: string; // key into the icon map in <Sidebar>
   group: string;
+  clientOnly?: boolean; // shown only to client-portal users (is_client)
 }
 
 export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", permission: null, icon: "home", group: "Workspace" },
+  { label: "My Portal", href: "/dashboard/portal", permission: null, icon: "folder", group: "Workspace", clientOnly: true },
   { label: "Intake", href: "/dashboard/intake", permission: "cases:read", icon: "intake", group: "Workspace" },
   { label: "Cases", href: "/dashboard/cases", permission: "cases:read", icon: "folder", group: "Workspace" },
   { label: "Tasks", href: "/dashboard/tasks", permission: "tasks:create", icon: "check", group: "Workspace" },

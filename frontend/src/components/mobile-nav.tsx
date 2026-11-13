@@ -16,9 +16,12 @@ import { NAV_ITEMS } from "@/lib/nav";
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const { can } = useAuth();
+  const { can, me } = useAuth();
 
-  const items = NAV_ITEMS.filter((i) => i.permission === null || can(i.permission));
+  const items = NAV_ITEMS.filter((i) => {
+    if (i.clientOnly && !me?.user.is_client) return false;
+    return i.permission === null || can(i.permission);
+  });
   const groups = Array.from(new Set(items.map((i) => i.group)));
 
   // Close on route change.

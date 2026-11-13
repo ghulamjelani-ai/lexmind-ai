@@ -226,6 +226,14 @@ export const api = {
 
   casesCsvUrl: () => `${V1}/reports/cases.csv`,
 
+  portalMe: () =>
+    request<{
+      linked: boolean;
+      client: { id: string; full_name: string; email: string | null } | null;
+      cases: { id: string; title: string; status: string; category: string; next_hearing_date: string | null }[];
+      invoices: { id: string; number: string; status: string; due_on: string | null; total: number; paid: number; balance: number }[];
+    }>("/portal/me"),
+
   calendar: (fromISO: string, toISO: string) =>
     request<CalendarItem[]>(`/calendar?from=${encodeURIComponent(fromISO)}&to=${encodeURIComponent(toISO)}`),
 
