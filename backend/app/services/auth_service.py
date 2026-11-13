@@ -49,10 +49,17 @@ def authenticate(db: Session, org_slug: str, email: str, password: str) -> User 
 
 def change_password(db: Session, user: User, current_password: str, new_password: str) -> bool:
     """Verify the current password and set a new one. Returns False if the
-    current password is wrong (no change made)."""
-    if not verify_password(current_password, user.password_hash):
+    current password is wrong (no change made).
+
+    ``user`` comes from the auth session and is detached, so re-load it on the
+    given (tenant) session — otherwise the update is never persisted.
+    """
+    u = db.get(User, user.id)
+    if u is None:
         return False
-    user.password_hash = hash_password(new_password)
+    if not verify_password(current_password, u.password_hash):
+        return False
+    u.password_hash = hash_password(new_password)
     db.flush()
     return True
 
