@@ -23,10 +23,18 @@ def provision_organization(
     org_name: str,
     org_slug: str,
     owner_email: str,
-    owner_password: str,
     owner_name: str,
+    owner_password: str | None = None,
+    owner_password_hash: str | None = None,
 ) -> tuple[Organization, User]:
-    """Create an organization, seed system roles, and create its owner user."""
+    """Create an organization, seed system roles, and create its owner user.
+
+    Pass either ``owner_password`` (hashed here) or a pre-computed
+    ``owner_password_hash`` (used after OTP-verified signup)."""
+    if not owner_password_hash:
+        if not owner_password:
+            raise ProvisioningError("A password or password hash is required")
+        owner_password_hash = hash_password(owner_password)
     if db.scalar(select(Organization).where(Organization.slug == org_slug)):
         raise ProvisioningError(f"Organization slug '{org_slug}' already exists")
 
@@ -42,7 +50,7 @@ def provision_organization(
     owner = User(
         organization_id=org.id,
         email=owner_email.lower(),
-        password_hash=hash_password(owner_password),
+        password_hash=owner_password_hash,
         full_name=owner_name,
         status="active",
     )

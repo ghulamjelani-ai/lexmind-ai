@@ -20,14 +20,17 @@ function slugify(value: string): string {
 
 export default function SignupPage() {
   const router = useRouter();
-  const { me, loading, login } = useAuth();
+  const { me, loading, refresh } = useAuth();
 
+  const [step, setStep] = useState<"form" | "verify">("form");
   const [orgName, setOrgName] = useState("");
   const [orgSlug, setOrgSlug] = useState("");
   const [slugEdited, setSlugEdited] = useState(false);
   const [ownerName, setOwnerName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -46,6 +49,10 @@ export default function SignupPage() {
       setError("Chamber ID must be at least 2 characters (letters, numbers, dashes).");
       return;
     }
+    if (!ownerName.trim()) {
+      setError("Please enter your name.");
+      return;
+    }
     if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) {
       setError("Password must be at least 8 characters and include a letter and a number.");
       return;
@@ -53,28 +60,58 @@ export default function SignupPage() {
 
     setSubmitting(true);
     try {
-      await api.registerOrg({
+      const res = await api.registerStart({
         org_name: orgName.trim(),
         org_slug: slug,
         owner_name: ownerName.trim(),
         owner_email: email.trim(),
         owner_password: password,
       });
-      // Auto sign-in the new owner, then go to the dashboard.
-      try {
-        await login(slug, email.trim(), password);
-        router.replace("/dashboard");
-      } catch {
-        router.replace("/login");
-      }
+      setNotice(res.message);
+      setStep("verify");
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.message || "Could not create your chamber. Try a different Chamber ID.");
+        setError(err.message || "Could not start signup. Try a different Chamber ID.");
       } else {
         setError("Could not reach the server. Please try again in a moment.");
       }
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function onVerify(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (otp.trim().length < 4) {
+      setError("Enter the code we emailed you.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await api.registerVerify(email.trim(), otp.trim());
+      await refresh();
+      router.replace("/dashboard");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not verify. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function resend() {
+    setError(null);
+    try {
+      const res = await api.registerStart({
+        org_name: orgName.trim(),
+        org_slug: effectiveSlug,
+        owner_name: ownerName.trim(),
+        owner_email: email.trim(),
+        owner_password: password,
+      });
+      setNotice(res.message);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not resend the code.");
     }
   }
 
@@ -107,49 +144,70 @@ export default function SignupPage() {
         <div className="w-full max-w-sm">
           <p className="eyebrow">Get started</p>
           <h1 className="mt-1 font-serif text-2xl font-semibold text-[var(--text)]">
-            Create your chamber
+            {step === "form" ? "Create your chamber" : "Verify your email"}
           </h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            You&apos;ll be the owner, with full control over users and roles.
+            {step === "form"
+              ? "You'll be the owner, with full control over users and roles."
+              : `Enter the 6-digit code we sent to ${email}.`}
           </p>
 
-          <form onSubmit={onSubmit} className="mt-6 space-y-4">
-            <Field
-              label="Chamber name"
-              value={orgName}
-              onChange={(v) => setOrgName(v)}
-              placeholder="Jelani Law Associates"
-              autoComplete="organization"
-            />
-            <div>
+          {step === "form" ? (
+            <form onSubmit={onSubmit} className="mt-6 space-y-4">
               <Field
-                label="Chamber ID"
-                value={effectiveSlug}
-                onChange={(v) => {
-                  setSlugEdited(true);
-                  setOrgSlug(slugify(v));
-                }}
-                placeholder="jelani-law"
+                label="Chamber name"
+                value={orgName}
+                onChange={(v) => setOrgName(v)}
+                placeholder="Jelani Law Associates"
+                autoComplete="organization"
               />
-              <p className="mt-1 text-xs text-[var(--muted)]">
-                Used to sign in. Lowercase letters, numbers and dashes.
-              </p>
-            </div>
-            <Field label="Your name" value={ownerName} onChange={setOwnerName} placeholder="Ghulam Jelani" autoComplete="name" />
-            <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@chamber.pk" autoComplete="email" />
-            <div>
-              <Field label="Password" type="password" value={password} onChange={setPassword} autoComplete="new-password" />
-              <p className="mt-1 text-xs text-[var(--muted)]">
-                At least 8 characters, including a letter and a number.
-              </p>
-            </div>
+              <div>
+                <Field
+                  label="Chamber ID"
+                  value={effectiveSlug}
+                  onChange={(v) => {
+                    setSlugEdited(true);
+                    setOrgSlug(slugify(v));
+                  }}
+                  placeholder="jelani-law"
+                />
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  Used to sign in. Lowercase letters, numbers and dashes.
+                </p>
+              </div>
+              <Field label="Your name" value={ownerName} onChange={setOwnerName} placeholder="Ghulam Jelani" autoComplete="name" />
+              <Field label="Email" type="email" value={email} onChange={setEmail} placeholder="you@chamber.pk" autoComplete="email" />
+              <div>
+                <Field label="Password" type="password" value={password} onChange={setPassword} autoComplete="new-password" />
+                <p className="mt-1 text-xs text-[var(--muted)]">
+                  At least 8 characters, including a letter and a number.
+                </p>
+              </div>
 
-            {error && <p className="badge badge-bad w-full justify-start px-3 py-2 font-normal">{error}</p>}
+              {error && <p className="badge badge-bad w-full justify-start px-3 py-2 font-normal">{error}</p>}
 
-            <button type="submit" disabled={submitting} className="btn btn-primary w-full py-2.5">
-              {submitting ? "Creating your chamber…" : "Create chamber"}
-            </button>
-          </form>
+              <button type="submit" disabled={submitting} className="btn btn-primary w-full py-2.5">
+                {submitting ? "Sending code…" : "Continue"}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={onVerify} className="mt-6 space-y-4">
+              {notice && <p className="badge badge-ok w-full justify-start px-3 py-2 font-normal">{notice}</p>}
+              <Field label="Verification code" value={otp} onChange={setOtp} placeholder="123456" />
+              {error && <p className="badge badge-bad w-full justify-start px-3 py-2 font-normal">{error}</p>}
+              <button type="submit" disabled={submitting} className="btn btn-primary w-full py-2.5">
+                {submitting ? "Verifying…" : "Verify & create chamber"}
+              </button>
+              <div className="flex items-center justify-between text-sm">
+                <button type="button" onClick={() => setStep("form")} className="text-[var(--muted)] hover:text-[var(--text)]">
+                  ← Edit details
+                </button>
+                <button type="button" onClick={resend} className="text-[var(--brand-gold-ink)] hover:underline">
+                  Resend code
+                </button>
+              </div>
+            </form>
+          )}
 
           <p className="mt-6 text-center text-sm text-[var(--muted)]">
             Already have a chamber?{" "}

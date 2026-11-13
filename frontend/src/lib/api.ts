@@ -91,16 +91,24 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
-  registerOrg: (input: {
+  // Step 1 of signup: emails a verification code (chamber not yet created).
+  registerStart: (input: {
     org_name: string;
     org_slug: string;
     owner_name: string;
     owner_email: string;
     owner_password: string;
   }) =>
-    request<{ id: string; name: string; slug: string }>("/orgs/register", {
+    request<{ message: string }>("/auth/register/start", {
       method: "POST",
       body: JSON.stringify(input),
+    }),
+
+  // Step 2: verify the code → creates the chamber and signs in.
+  registerVerify: (email: string, code: string) =>
+    request<Me>("/auth/register/verify", {
+      method: "POST",
+      body: JSON.stringify({ email, code }),
     }),
 
   login: (org_slug: string, email: string, password: string, mfa_code?: string) =>

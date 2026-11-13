@@ -27,6 +27,11 @@ class ChamberLookupIn(BaseModel):
     email: EmailStr
 
 
+class RegisterVerifyIn(BaseModel):
+    email: EmailStr
+    code: str = Field(min_length=4, max_length=12)
+
+
 class PasswordResetRequestIn(BaseModel):
     org_slug: str = Field(min_length=1, max_length=120)
     email: EmailStr

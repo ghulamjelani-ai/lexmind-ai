@@ -85,29 +85,13 @@ def money(rupees: int) -> int:
 def main() -> None:
     print(f"Seeding demo chamber '{SLUG}' on {API}")
     with httpx.Client(timeout=30, follow_redirects=True) as c:
-        # 1) Register the chamber (ignore if it already exists).
-        r = c.post(
-            f"{V1}/orgs/register",
-            json={
-                "org_name": "Demo Law Chamber",
-                "org_slug": SLUG,
-                "owner_name": "Omar Owner",
-                "owner_email": EMAIL,
-                "owner_password": PASSWORD,
-            },
-        )
-        if r.status_code == 201:
-            print(f"  created chamber + owner {EMAIL}")
-        elif r.status_code == 409:
-            print(f"  chamber '{SLUG}' already exists — adding data to it")
-        else:
-            print(f"  register failed ({r.status_code}): {r.text}")
-            return
-
-        # 2) Log in (session cookie is stored on the client).
+        # 1) Log in. Chamber creation now requires email-verified signup
+        # (POST /auth/register/start + /auth/register/verify), so this script
+        # adds data to an EXISTING demo chamber. Create it once via the signup
+        # UI (or the API register flow) before running this.
         r = c.post(f"{V1}/auth/login", json={"org_slug": SLUG, "email": EMAIL, "password": PASSWORD})
         if r.status_code != 200:
-            print(f"  login failed ({r.status_code}): {r.text}")
+            print(f"  login failed ({r.status_code}). Create the '{SLUG}' chamber first via signup.")
             return
         print("  logged in")
 

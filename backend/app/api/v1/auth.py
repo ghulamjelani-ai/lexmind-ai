@@ -23,13 +23,21 @@ from app.schemas.auth import (
     MfaCodeIn,
     MfaEnrollOut,
     ChamberLookupIn,
+    OrgRegisterRequest,
+    RegisterVerifyIn,
     PasswordChangeIn,
     ProfileUpdateIn,
     PasswordResetConfirmIn,
     PasswordResetRequestIn,
     UserOut,
 )
-from app.services import audit_service, auth_service, mfa_service, password_reset_service
+from app.services import (
+    audit_service,
+    auth_service,
+    mfa_service,
+    password_reset_service,
+    verification_service,
+)
 from app.services.rbac_service import build_auth_context
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -212,6 +220,69 @@ def mfa_disable(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     db.commit()
     return MessageOut(message="MFA disabled")
+
+
+# --- Email-verified signup ---------------------------------------------------
+@router.post(
+    "/register/start",
+    response_model=MessageOut,
+    dependencies=[Depends(rate_limit("register_start", 5, 600))],
+)
+def register_start(body: OrgRegisterRequest, db: Session = Depends(get_db)) -> MessageOut:
+    """Step 1 of signup: send a 6-digit verification code to the owner's email.
+    The chamber is NOT created until the code is verified."""
+    try:
+        code = verification_service.create_signup_otp(
+            db,
+            org_name=body.org_name,
+            org_slug=body.org_slug,
+            owner_name=body.owner_name,
+            owner_email=body.owner_email,
+            owner_password=body.owner_password,
+        )
+    except verification_service.VerificationError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    db.commit()
+    sent = send_email(
+        body.owner_email,
+        "Your LexMind verification code",
+        f"Your LexMind verification code is: {code}\n\n"
+        f"It expires in {verification_service.OTP_TTL_MINUTES} minutes. "
+        "If you did not request this, you can ignore this email.",
+    )
+    return MessageOut(
+        message=(
+            "Verification code sent to your email."
+            if sent
+            else "Verification code generated, but email delivery is not configured for this address."
+        )
+    )
+
+
+@router.post(
+    "/register/verify",
+    response_model=MeOut,
+    dependencies=[Depends(rate_limit("register_verify", 10, 300))],
+)
+def register_verify(
+    body: RegisterVerifyIn, request: Request, response: Response, db: Session = Depends(get_db)
+) -> MeOut:
+    """Step 2 of signup: verify the code, create the chamber, and sign in."""
+    try:
+        _org, owner = verification_service.verify_signup(db, body.email, body.code)
+    except verification_service.VerificationError as exc:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    token = auth_service.create_session(
+        db, owner, ip=_ip(request), user_agent=request.headers.get("user-agent")
+    )
+    db.commit()
+    _set_session_cookie(response, token)
+    ctx = build_auth_context(db, owner)
+    return MeOut(
+        user=UserOut.model_validate(owner),
+        permissions={code: sorted(scopes) for code, scopes in ctx.permissions.items()},
+    )
 
 
 # --- Chamber ID recovery -----------------------------------------------------
