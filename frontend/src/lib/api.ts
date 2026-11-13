@@ -128,6 +128,9 @@ export const api = {
 
   me: () => request<Me>("/auth/me"),
 
+  updateProfile: (full_name: string) =>
+    request<Me>("/auth/me", { method: "PATCH", body: JSON.stringify({ full_name }) }),
+
   myOrg: () => request<Organization>("/orgs/me"),
 
   listUsers: () => request<User[]>("/users"),

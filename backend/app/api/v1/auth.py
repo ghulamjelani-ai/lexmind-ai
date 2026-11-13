@@ -17,6 +17,7 @@ from app.schemas.auth import (
     MfaCodeIn,
     MfaEnrollOut,
     PasswordChangeIn,
+    ProfileUpdateIn,
     PasswordResetConfirmIn,
     PasswordResetRequestIn,
     UserOut,
@@ -131,6 +132,22 @@ def me(
 ) -> MeOut:
     return MeOut(
         user=UserOut.model_validate(user),
+        permissions={code: sorted(scopes) for code, scopes in ctx.permissions.items()},
+    )
+
+
+@router.patch("/me", response_model=MeOut)
+def update_me(
+    body: ProfileUpdateIn,
+    db: Session = Depends(get_tenant_db),
+    user: User = Depends(get_current_user),
+    ctx: AuthContext = Depends(get_auth_context),
+) -> MeOut:
+    """Update the signed-in user's own profile (name)."""
+    updated = auth_service.update_profile(db, user, body.full_name)
+    db.commit()
+    return MeOut(
+        user=UserOut.model_validate(updated),
         permissions={code: sorted(scopes) for code, scopes in ctx.permissions.items()},
     )
 

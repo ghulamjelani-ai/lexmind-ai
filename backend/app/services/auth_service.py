@@ -64,6 +64,17 @@ def change_password(db: Session, user: User, current_password: str, new_password
     return True
 
 
+def update_profile(db: Session, user: User, full_name: str) -> User:
+    """Update the signed-in user's own profile fields. ``user`` is detached, so
+    re-load it on the given session before writing."""
+    u = db.get(User, user.id)
+    if u is None:
+        raise ValueError("User not found")
+    u.full_name = full_name.strip()
+    db.flush()
+    return u
+
+
 def create_session(
     db: Session, user: User, ip: str | None = None, user_agent: str | None = None
 ) -> str:

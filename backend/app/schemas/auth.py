@@ -37,6 +37,10 @@ class PasswordChangeIn(BaseModel):
     new_password: str = Field(min_length=8, max_length=256)
 
 
+class ProfileUpdateIn(BaseModel):
+    full_name: str = Field(min_length=1, max_length=255)
+
+
 class InviteCreateIn(BaseModel):
     email: EmailStr
     role: str = Field(min_length=1, max_length=100)

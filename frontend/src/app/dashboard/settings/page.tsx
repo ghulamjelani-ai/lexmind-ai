@@ -27,13 +27,7 @@ export default function SettingsPage() {
           <Row label="Chamber ID" value={org?.slug ?? "—"} mono />
         </Card>
 
-        <Card>
-          <p className="eyebrow mb-3">Your account</p>
-          <Row label="Name" value={me?.user.full_name ?? "—"} />
-          <Row label="Email" value={me?.user.email ?? "—"} />
-          <Row label="Type" value={me?.user.is_client ? "Client" : "Staff"} />
-          <Row label="Status" value={me?.user.status ?? "—"} />
-        </Card>
+        <AccountCard />
 
         <div className="lg:col-span-2">
           <ChangePasswordCard />
@@ -67,6 +61,50 @@ function Row({ label, value, mono }: { label: string; value: string; mono?: bool
       <span className="text-sm text-[var(--muted)]">{label}</span>
       <span className={`text-sm text-[var(--text)] ${mono ? "font-mono" : ""}`}>{value}</span>
     </div>
+  );
+}
+
+function AccountCard() {
+  const { me, refresh } = useAuth();
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+
+  useEffect(() => {
+    if (me) setName(me.user.full_name);
+  }, [me]);
+
+  const dirty = me != null && name.trim().length > 0 && name.trim() !== me.user.full_name;
+
+  async function save() {
+    setBusy(true);
+    try {
+      await api.updateProfile(name.trim());
+      await refresh();
+      toast.success("Profile updated", "Your name has been saved.");
+    } catch (err) {
+      toast.error("Couldn't update profile", err instanceof ApiError ? err.message : "Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card>
+      <p className="eyebrow mb-3">Your account</p>
+      <label className="block">
+        <span className="mb-1 block text-sm font-medium text-[var(--text)]">Name</span>
+        <input value={name} onChange={(e) => setName(e.target.value)} className="input" />
+      </label>
+      <div className="mt-3">
+        <Row label="Email" value={me?.user.email ?? "—"} />
+        <Row label="Type" value={me?.user.is_client ? "Client" : "Staff"} />
+        <Row label="Status" value={me?.user.status ?? "—"} />
+      </div>
+      <button onClick={save} disabled={!dirty || busy} className="btn btn-primary mt-4 w-fit px-5">
+        {busy ? "Saving…" : "Save changes"}
+      </button>
+    </Card>
   );
 }
 
