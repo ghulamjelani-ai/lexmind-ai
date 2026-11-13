@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { Icon } from "@/components/icons";
 import { useToast } from "@/components/toast";
 import { EmptyState, VerificationBadge } from "@/components/ui";
-import { api, ApiError, CASE_STATUSES } from "@/lib/api";
+import { api, ApiError, CASE_PRIORITIES, CASE_STATUSES } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { Case, CaseAnalysis, CaseEvent, EvidenceAnalysis, Hearing, LegalDraft } from "@/types";
 
@@ -47,6 +47,16 @@ export default function CaseDetailPage() {
       toast.success("Status updated", `Case moved to "${status.replace(/_/g, " ")}".`);
     } catch (err) {
       toast.error("Couldn't update status", err instanceof ApiError ? err.message : "Please try again.");
+    }
+  }
+
+  async function changePriority(priority: string) {
+    try {
+      await api.updateCase(caseId, { priority });
+      await load();
+      toast.success("Priority updated", `Case priority set to ${priority}.`);
+    } catch (err) {
+      toast.error("Couldn't update priority", err instanceof ApiError ? err.message : "Please try again.");
     }
   }
 
@@ -120,7 +130,13 @@ export default function CaseDetailPage() {
           </select>
         </Field>
         <Field label="Priority">
-          <span className="capitalize">{kase.priority}</span>
+          <select value={kase.priority} onChange={(e) => changePriority(e.target.value)} className="select capitalize">
+            {CASE_PRIORITIES.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
         </Field>
         <Field label="Court">{kase.court_name ?? "—"}</Field>
         <Field label="Next hearing">{kase.next_hearing_date ?? "—"}</Field>
