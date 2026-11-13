@@ -36,6 +36,10 @@ export default function SettingsPage() {
         </Card>
 
         <div className="lg:col-span-2">
+          <ChangePasswordCard />
+        </div>
+
+        <div className="lg:col-span-2">
           <MfaCard />
         </div>
 
@@ -63,6 +67,59 @@ function Row({ label, value, mono }: { label: string; value: string; mono?: bool
       <span className="text-sm text-[var(--muted)]">{label}</span>
       <span className={`text-sm text-[var(--text)] ${mono ? "font-mono" : ""}`}>{value}</span>
     </div>
+  );
+}
+
+function ChangePasswordCard() {
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [reveal, setReveal] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (next.length < 8 || !/[a-zA-Z]/.test(next) || !/[0-9]/.test(next)) {
+      toast.error("Weak password", "Use at least 8 characters with a letter and a number.");
+      return;
+    }
+    if (next !== confirm) {
+      toast.error("Passwords don't match", "Re-enter the new password to confirm.");
+      return;
+    }
+    setBusy(true);
+    try {
+      await api.changePassword(current, next);
+      setCurrent("");
+      setNext("");
+      setConfirm("");
+      toast.success("Password changed", "Use your new password next time you sign in.");
+    } catch (err) {
+      toast.error("Couldn't change password", err instanceof ApiError ? err.message : "Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const type = reveal ? "text" : "password";
+  return (
+    <Card>
+      <p className="eyebrow mb-1">Change password</p>
+      <p className="mb-3 text-sm text-[var(--muted)]">Update the password you use to sign in.</p>
+      <form onSubmit={submit} className="grid max-w-md gap-3">
+        <input type={type} value={current} onChange={(e) => setCurrent(e.target.value)} placeholder="Current password" autoComplete="current-password" required className="input" />
+        <input type={type} value={next} onChange={(e) => setNext(e.target.value)} placeholder="New password" autoComplete="new-password" required className="input" />
+        <input type={type} value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Confirm new password" autoComplete="new-password" required className="input" />
+        <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
+          <input type="checkbox" checked={reveal} onChange={(e) => setReveal(e.target.checked)} />
+          Show passwords
+        </label>
+        <button disabled={busy} className="btn btn-primary w-fit px-5">
+          {busy ? "Saving…" : "Change password"}
+        </button>
+      </form>
+    </Card>
   );
 }
 

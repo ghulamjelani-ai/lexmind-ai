@@ -16,6 +16,7 @@ from app.schemas.auth import (
     MessageOut,
     MfaCodeIn,
     MfaEnrollOut,
+    PasswordChangeIn,
     PasswordResetConfirmIn,
     PasswordResetRequestIn,
     UserOut,
@@ -216,3 +217,24 @@ def password_reset_confirm(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token"
         )
     return MessageOut(message="Password updated")
+
+
+@router.post(
+    "/password/change",
+    response_model=MessageOut,
+    dependencies=[Depends(rate_limit("pwchange", 10, 300))],
+)
+def password_change(
+    body: PasswordChangeIn,
+    db: Session = Depends(get_tenant_db),
+    user: User = Depends(get_current_user),
+) -> MessageOut:
+    """Change the signed-in user's own password (requires the current one)."""
+    ok = auth_service.change_password(db, user, body.current_password, body.new_password)
+    if not ok:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect"
+        )
+    db.commit()
+    return MessageOut(message="Password changed")

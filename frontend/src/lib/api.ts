@@ -118,6 +118,12 @@ export const api = {
       body: JSON.stringify({ token, new_password }),
     }),
 
+  changePassword: (current_password: string, new_password: string) =>
+    request<{ message: string }>("/auth/password/change", {
+      method: "POST",
+      body: JSON.stringify({ current_password, new_password }),
+    }),
+
   logout: () => request<{ message: string }>("/auth/logout", { method: "POST" }),
 
   me: () => request<Me>("/auth/me"),
