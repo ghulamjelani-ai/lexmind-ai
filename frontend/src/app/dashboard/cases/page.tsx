@@ -26,8 +26,14 @@ export default function CasesPage() {
 
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("criminal");
+  const [clientId, setClientId] = useState("");
+  const [clients, setClients] = useState<{ id: string; full_name: string }[]>([]);
   const [creating, setCreating] = useState(false);
   const toast = useToast();
+
+  useEffect(() => {
+    api.listClients().then((p) => setClients(p.items)).catch(() => setClients([]));
+  }, []);
 
   async function load() {
     setLoading(true);
@@ -53,8 +59,9 @@ export default function CasesPage() {
     setError(null);
     try {
       const t = title.trim();
-      await api.createCase({ title, category });
+      await api.createCase({ title, category, client_id: clientId || undefined });
       setTitle("");
+      setClientId("");
       await load();
       toast.success("Case created", `"${t}" has been added to your cases.`);
     } catch (err) {
@@ -96,6 +103,17 @@ export default function CasesPage() {
               {CASE_CATEGORIES.map((c) => (
                 <option key={c} value={c}>
                   {c}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span className="mb-1 block text-sm font-medium text-[var(--text)]">Client</span>
+            <select value={clientId} onChange={(e) => setClientId(e.target.value)} className="select min-w-[12rem]">
+              <option value="">No client / unassigned</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.full_name}
                 </option>
               ))}
             </select>

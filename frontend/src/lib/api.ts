@@ -184,13 +184,15 @@ export const api = {
     return request<Page<Case>>(`/cases?${qs.toString()}`);
   },
 
-  createCase: (input: { title: string; category: string; opposite_party?: string }) =>
+  createCase: (input: { title: string; category: string; opposite_party?: string; client_id?: string }) =>
     request<Case>("/cases", { method: "POST", body: JSON.stringify(input) }),
 
   getCase: (id: string) => request<Case>(`/cases/${id}`),
 
-  updateCase: (id: string, patch: Partial<Pick<Case, "status" | "priority" | "title">>) =>
-    request<Case>(`/cases/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
+  updateCase: (
+    id: string,
+    patch: Partial<Pick<Case, "status" | "priority" | "title">> & { client_id?: string | null },
+  ) => request<Case>(`/cases/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
 
   caseTimeline: (id: string) => request<CaseEvent[]>(`/cases/${id}/timeline`),
 
