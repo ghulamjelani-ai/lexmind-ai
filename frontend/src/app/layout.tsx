@@ -15,10 +15,42 @@ const fraunces = Fraunces({
   weight: ["400", "500", "600", "700"],
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://lexmind-ai-iota.vercel.app";
+const TITLE = "LexMind — AI legal intelligence for Pakistani law chambers";
+const DESCRIPTION =
+  "Case management, AI drafting and legal research grounded in official Pakistani sources. Every AI output is a draft, cited and flagged for a lawyer to verify.";
+
 export const metadata: Metadata = {
-  title: "LexMind AI — Legal Intelligence",
-  description:
-    "AI-powered legal intelligence and law chamber management platform for Pakistan.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: TITLE,
+    template: "%s · LexMind",
+  },
+  description: DESCRIPTION,
+  applicationName: "LexMind",
+  keywords: [
+    "law chamber software Pakistan",
+    "legal case management",
+    "AI legal research",
+    "Pakistan law firm software",
+    "legal drafting AI",
+    "FBR tax",
+  ],
+  authors: [{ name: "LexMind" }],
+  openGraph: {
+    type: "website",
+    siteName: "LexMind",
+    url: SITE_URL,
+    title: TITLE,
+    description: DESCRIPTION,
+    locale: "en_PK",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+  robots: { index: true, follow: true },
 };
 
 // Runs before paint: apply the saved theme so there is no light/dark flash.

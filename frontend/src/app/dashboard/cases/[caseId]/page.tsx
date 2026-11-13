@@ -127,14 +127,14 @@ export default function CaseDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="mt-7 flex gap-1 border-b border-[var(--border)]">
+      <div className="mt-7 flex gap-1 overflow-x-auto border-b border-[var(--border)]">
         {tabs
           .filter((t) => t.show)
           .map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`-mb-px flex items-center gap-2 border-b-2 px-3.5 py-2.5 text-sm font-medium transition ${
+              className={`-mb-px flex shrink-0 items-center gap-2 border-b-2 px-3.5 py-2.5 text-sm font-medium transition ${
                 tab === t.id
                   ? "border-[var(--brand-gold)] text-[var(--text)]"
                   : "border-transparent text-[var(--muted)] hover:text-[var(--text)]"
