@@ -69,6 +69,25 @@ export default function PortalPage() {
           </section>
 
           <section>
+            <h2 className="eyebrow mb-3">Your documents</h2>
+            {data.documents.length === 0 ? (
+              <EmptyState icon="doc" title="No documents yet" hint="Documents your chamber shares on your cases will appear here." />
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {data.documents.map((d) => (
+                  <Card key={d.id}>
+                    <p className="font-medium text-[var(--text)]">{d.title}</p>
+                    <p className="mt-1 text-xs capitalize text-[var(--muted)]">
+                      {d.category.replace(/_/g, " ")}
+                      {d.created_at ? ` · ${new Date(d.created_at).toLocaleDateString()}` : ""}
+                    </p>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section>
             <h2 className="eyebrow mb-3">Your invoices</h2>
             {data.invoices.length === 0 ? (
               <EmptyState icon="receipt" title="No invoices yet" hint="Invoices from your chamber will appear here." />

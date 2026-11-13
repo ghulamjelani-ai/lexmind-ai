@@ -242,6 +242,7 @@ export const api = {
       client: { id: string; full_name: string; email: string | null } | null;
       cases: { id: string; title: string; status: string; category: string; next_hearing_date: string | null }[];
       invoices: { id: string; number: string; status: string; due_on: string | null; total: number; paid: number; balance: number }[];
+      documents: { id: string; title: string; category: string; created_at: string | null }[];
     }>("/portal/me"),
 
   calendar: (fromISO: string, toISO: string) =>

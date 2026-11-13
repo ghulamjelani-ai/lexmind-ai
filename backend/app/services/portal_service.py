@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from app.models.case import Case
 from app.models.client import Client
+from app.models.document import Document
 from app.models.finance import Invoice, InvoiceItem, Payment
 from app.models.user import User
 
@@ -59,18 +60,32 @@ def _invoice_amounts(db: Session, invoice_id) -> tuple[int, int]:
 def overview(db: Session, user: User) -> dict:
     client = resolve_client(db, user)
     if client is None:
-        return {"linked": False, "client": None, "cases": [], "invoices": []}
+        return {"linked": False, "client": None, "cases": [], "invoices": [], "documents": []}
 
     cases = db.scalars(
         select(Case).where(Case.client_id == client.id, Case.deleted_at.is_(None))
     ).all()
+    case_ids = [c.id for c in cases]
     invoices = db.scalars(
         select(Invoice).where(Invoice.client_id == client.id)
     ).all()
+    documents = (
+        db.scalars(
+            select(Document).where(
+                Document.case_id.in_(case_ids), Document.deleted_at.is_(None)
+            )
+        ).all()
+        if case_ids
+        else []
+    )
 
     return {
         "linked": True,
         "client": {"id": str(client.id), "full_name": client.full_name, "email": client.email},
+        "documents": [
+            {"id": str(d.id), "title": d.title, "category": d.category, "created_at": d.created_at.isoformat() if d.created_at else None}
+            for d in documents
+        ],
         "cases": [
             {
                 "id": str(c.id),
