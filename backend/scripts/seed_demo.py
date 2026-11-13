@@ -68,6 +68,15 @@ LEADS = [
     ("Faisal Mehmood", "FBR", "other", "Income tax notice u/s 122; needs representation before CIR Appeals."),
 ]
 
+# (filename, category, body) — small synthetic text files for the Documents module.
+DOCUMENTS = [
+    ("FIR-345-2026.txt", "fir", "FIRST INFORMATION REPORT\nFIR No. 345/2026\nOffence: Theft u/s 379 PPC\nPolice Station: Civil Lines, Lahore\nComplainant: Market Committee\nBrief: Shop lock broken; goods stolen between 2:00-4:00 AM. CCTV requisitioned."),
+    ("Bail-Application-Imran-Qureshi.txt", "court_order", "IN THE COURT OF SESSIONS JUDGE, LAHORE\nBail Application u/s 497 Cr.P.C.\nAccused: Muhammad Imran Qureshi\nGrounds: No prior record; investigation complete; offence falls in non-prohibitory clause."),
+    ("Sale-Agreement-Pearl-Developers.txt", "agreement", "AGREEMENT TO SELL\nBetween: Ayesha Siddiqui (Vendee) and Pearl Developers (Vendor)\nProperty: Plot No. 14, Block 5, Clifton, Karachi\nConsideration: PKR 2,50,00,000\nPossession: On final payment."),
+    ("Witness-Statement-Hassan-Ali.txt", "witness_statement", "STATEMENT OF WITNESS\nCase: State vs. Hassan Ali (u/s 420 PPC)\nWitness deposes to the issuance of a cheque that was later dishonoured, and to representations made at the time of the transaction."),
+    ("Legal-Notice-United-Bank.txt", "correspondence", "LEGAL NOTICE\nTo: United Bank Ltd\nOn behalf of: Fatima Noor\nSubject: Recovery of wrongfully debited amount. You are called upon to refund within 14 days, failing which legal proceedings will follow."),
+]
+
 
 def money(rupees: int) -> int:
     return rupees * 100
@@ -194,6 +203,18 @@ def main() -> None:
                    json={"client_id": client_ids[i], "kind": "deposit", "amount": money(50000),
                          "note": "Advance held in client trust account."})
         print(f"  invoices: {invoices} (payments: {payments}), expenses: 4, trust deposits: 2")
+
+        # 8) Documents (multipart upload of small synthetic files)
+        docs = 0
+        for fname, category, body in DOCUMENTS:
+            r = c.post(
+                f"{V1}/documents",
+                files={"file": (fname, body.encode("utf-8"), "text/plain")},
+                data={"title": fname.rsplit(".", 1)[0].replace("-", " "), "category": category},
+            )
+            if r.status_code < 300:
+                docs += 1
+        print(f"  documents: {docs}")
 
     print("\nDone. Demo login:")
     print(f"  Chamber ID: {SLUG}")
