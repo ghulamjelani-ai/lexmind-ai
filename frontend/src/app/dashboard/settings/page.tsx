@@ -38,6 +38,10 @@ export default function SettingsPage() {
         </div>
 
         <div className="lg:col-span-2">
+          <ActiveSessionsCard />
+        </div>
+
+        <div className="lg:col-span-2">
           <Card>
             <p className="eyebrow mb-3">Your access ({me ? Object.keys(me.permissions).length : 0} permissions)</p>
             <div className="flex flex-wrap gap-2">
@@ -104,6 +108,83 @@ function AccountCard() {
       <button onClick={save} disabled={!dirty || busy} className="btn btn-primary mt-4 w-fit px-5">
         {busy ? "Saving…" : "Save changes"}
       </button>
+    </Card>
+  );
+}
+
+type SessionRow = Awaited<ReturnType<typeof api.listSessions>>[number];
+
+function ActiveSessionsCard() {
+  const [sessions, setSessions] = useState<SessionRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const toast = useToast();
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      setSessions(await api.listSessions());
+    } catch {
+      setSessions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void load();
+  }, []);
+
+  async function revoke(s: SessionRow) {
+    if (!window.confirm("Sign out this session?")) return;
+    try {
+      await api.revokeSession(s.id);
+      await load();
+      toast.success("Session revoked", "That device has been signed out.");
+    } catch (err) {
+      toast.error("Couldn't revoke session", err instanceof ApiError ? err.message : "Please try again.");
+    }
+  }
+
+  function device(ua: string | null): string {
+    if (!ua) return "Unknown device";
+    if (/mobile|android|iphone/i.test(ua)) return "Mobile device";
+    if (/chrome/i.test(ua)) return "Chrome browser";
+    if (/firefox/i.test(ua)) return "Firefox browser";
+    if (/safari/i.test(ua)) return "Safari browser";
+    if (/edg/i.test(ua)) return "Edge browser";
+    return "Browser";
+  }
+
+  return (
+    <Card>
+      <p className="eyebrow mb-1">Active sessions</p>
+      <p className="mb-3 text-sm text-[var(--muted)]">Devices currently signed in to your account.</p>
+      {loading ? (
+        <p className="text-sm text-[var(--muted)]">Loading…</p>
+      ) : sessions.length === 0 ? (
+        <p className="text-sm text-[var(--muted)]">No active sessions.</p>
+      ) : (
+        <ul className="divide-y divide-[var(--border)]">
+          {sessions.map((s) => (
+            <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-3 first:pt-0 last:pb-0">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-[var(--text)]">
+                  {device(s.user_agent)}
+                  {s.current && <span className="ml-2 badge badge-ok">This device</span>}
+                </p>
+                <p className="mt-0.5 text-xs text-[var(--muted)]">
+                  {s.ip ? `${s.ip} · ` : ""}signed in {s.created_at ? new Date(s.created_at).toLocaleString() : "—"}
+                </p>
+              </div>
+              {!s.current && (
+                <button onClick={() => revoke(s)} className="text-sm font-medium text-[var(--bad)] hover:underline">
+                  Sign out
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </Card>
   );
 }

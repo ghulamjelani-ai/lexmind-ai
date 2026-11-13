@@ -120,3 +120,32 @@ def revoke_session(db: Session, raw_token: str) -> None:
     if session is not None and session.revoked_at is None:
         session.revoked_at = _now()
         db.flush()
+
+
+def list_active_sessions(db: Session, user_id, now: datetime | None = None) -> list[UserSession]:
+    """Active (non-revoked, non-expired) sessions for a user, newest first."""
+    now = now or _now()
+    rows = db.scalars(
+        select(UserSession)
+        .where(UserSession.user_id == user_id, UserSession.revoked_at.is_(None))
+        .order_by(UserSession.created_at.desc())
+    ).all()
+    out = []
+    for s in rows:
+        exp = s.expires_at if s.expires_at.tzinfo else s.expires_at.replace(tzinfo=UTC)
+        if exp > now:
+            out.append(s)
+    return out
+
+
+def revoke_session_by_id(db: Session, user_id, session_id) -> bool:
+    """Revoke one of the user's own sessions by id. Returns False if not found."""
+    session = db.scalar(
+        select(UserSession).where(UserSession.id == session_id, UserSession.user_id == user_id)
+    )
+    if session is None:
+        return False
+    if session.revoked_at is None:
+        session.revoked_at = _now()
+        db.flush()
+    return True

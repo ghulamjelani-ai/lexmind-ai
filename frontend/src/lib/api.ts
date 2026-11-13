@@ -127,6 +127,14 @@ export const api = {
       body: JSON.stringify({ current_password, new_password }),
     }),
 
+  listSessions: () =>
+    request<{ id: string; ip: string | null; user_agent: string | null; created_at: string | null; expires_at: string | null; current: boolean }[]>(
+      "/auth/sessions",
+    ),
+
+  revokeSession: (id: string) =>
+    request<{ message: string }>(`/auth/sessions/${id}/revoke`, { method: "POST" }),
+
   logout: () => request<{ message: string }>("/auth/logout", { method: "POST" }),
 
   me: () => request<Me>("/auth/me"),

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
@@ -7,6 +9,7 @@ from app.api.deps import get_auth_context, get_current_user, get_tenant_db
 from app.core.config import get_settings
 from app.core.email import send_email
 from app.core.ratelimit import rate_limit
+from app.core.security import hash_token
 from app.core.rbac import AuthContext
 from app.db.session import get_db
 from app.models.user import User
@@ -255,3 +258,39 @@ def password_change(
         )
     db.commit()
     return MessageOut(message="Password changed")
+
+
+@router.get("/sessions")
+def list_sessions(
+    request: Request,
+    db: Session = Depends(get_tenant_db),
+    user: User = Depends(get_current_user),
+) -> list[dict]:
+    """Active sign-in sessions (devices) for the current user."""
+    raw = request.cookies.get(get_settings().session_cookie_name, "")
+    current = hash_token(raw) if raw else None
+    return [
+        {
+            "id": str(s.id),
+            "ip": s.ip,
+            "user_agent": s.user_agent,
+            "created_at": s.created_at.isoformat() if s.created_at else None,
+            "expires_at": s.expires_at.isoformat() if s.expires_at else None,
+            "current": s.token_hash == current,
+        }
+        for s in auth_service.list_active_sessions(db, user.id)
+    ]
+
+
+@router.post("/sessions/{session_id}/revoke", response_model=MessageOut)
+def revoke_session(
+    session_id: uuid.UUID,
+    db: Session = Depends(get_tenant_db),
+    user: User = Depends(get_current_user),
+) -> MessageOut:
+    """Revoke (sign out) one of the current user's own sessions."""
+    ok = auth_service.revoke_session_by_id(db, user.id, session_id)
+    db.commit()
+    if not ok:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+    return MessageOut(message="Session revoked")
